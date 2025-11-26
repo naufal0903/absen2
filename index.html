@@ -111,6 +111,24 @@ body {
     min-height: 100vh;
 }
 
+/* Tambahkan di bagian CSS */
+.employee-info-message {
+    background: var(--primary-light);
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 16px;
+    text-align: center;
+    color: var(--primary-dark);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.employee-info-message strong {
+    color: var(--primary);
+    font-weight: 600;
+}
+
 /* Layout Dashboard */
 .dashboard-container {
     display: flex;
@@ -1151,29 +1169,33 @@ tr:hover {
         <span id="notificationText">Notification text</span>
     </div>
     
-    <!-- Modal Pemilihan Karyawan di Awal -->
-    <div id="employeeSelectionModal" class="modal-overlay show">
-        <div class="modal employee-selection-modal">
-            <div class="modal-header">
-                <div class="modal-icon">
-                    <span class="icon icon-user"></span>
-                </div>
-                <h3 class="modal-title">Silakan Pilih Karyawan</h3>
+<!-- Modal Pemilihan Karyawan di Awal -->
+<div id="employeeSelectionModal" class="modal-overlay show">
+    <div class="modal employee-selection-modal">
+        <div class="modal-header">
+            <div class="modal-icon">
+                <span class="icon icon-user"></span>
             </div>
-            <div class="modal-body">
-                <p>Pilih nama karyawan Anda untuk melanjutkan ke dashboard absensi.</p>
-                <div class="employee-list" id="employeeList">
-                    <!-- Daftar karyawan akan diisi oleh JavaScript -->
-                </div>
+            <h3 class="modal-title">Silakan Pilih Karyawan</h3>
+        </div>
+        <div class="modal-body">
+            <p>Pilih nama karyawan Anda untuk melanjutkan ke dashboard absensi.</p>
+            <div class="employee-list" id="employeeList">
+                <!-- Daftar karyawan akan diisi oleh JavaScript -->
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" id="confirmEmployeeBtn" disabled>
-                    <span class="icon icon-checkin"></span>
-                    Konfirmasi Pilihan
-                </button>
+            <!-- Tambahkan pesan info di sini -->
+            <div class="employee-info-message">
+                Jika nama tidak ada harap hubungi <strong>Admin</strong>
             </div>
         </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" id="confirmEmployeeBtn" disabled>
+                <span class="icon icon-checkin"></span>
+                Konfirmasi Pilihan
+            </button>
+        </div>
     </div>
+</div>
     
     <!-- Password Modal untuk Admin/Boss -->
     <div id="passwordModal" class="modal-overlay password-modal">
@@ -1581,12 +1603,53 @@ tr:hover {
             { id: 7, name: "Giw", role: "boss", position: "boss", password: "boss123" },
             { id: 8, name: "Vyan", role: "boss", position: "boss", password: "boss123" },
             { id: 9, name: "Ryota", role: "boss", position: "boss", password: "boss123" },
-            { id: 10, name: "Enzy", role: "boss", position: "boss", password: "boss123" },
+            { id: 10, name: "Tommm", role: "employee", position: "Manager" },
             { id: 11, name: "Beckham Durrel", role: "employee", position: "Manager" },
             { id: 12, name: "Goby Chana", role: "employee", position: "Manager" },
             { id: 13, name: "Cihyi Mori", role: "employee", position: "Manager" },
             { id: 14, name: "Kyra", role: "employee", position: "Manager" },
-            { id: 15, name: "Molly", role: "employee", position: "Mechanic" }
+            { id: 15, name: "Koko", role: "employee", position: "Manager" },
+            { id: 16, name: "Broklyn", role: "employee", position: "Manager" },
+            { id: 17, name: "Andre", role: "employee", position: "Manager" },
+            { id: 18, name: "Vinsaka", role: "employee", position: "Manager" },
+            { id: 19, name: "Yori", role: "employee", position: "Manager" },
+            { id: 20, name: "Berhala", role: "employee", position: "Senior Mechanic" },
+            { id: 21, name: "Ruby", role: "employee", position: "Senior Mechanic" },
+            { id: 22, name: "Maudy", role: "employee", position: "Senior Mechanic" },
+            { id: 23, name: "Zairen", role: "employee", position: "Senior Mechanic" },
+            { id: 24, name: "Gwen", role: "employee", position: "Senior Mechanic" },
+            { id: 25, name: "Aidan", role: "employee", position: "Senior Mechanic" },
+            { id: 26, name: "Dahyun", role: "employee", position: "Senior Mechanic" },
+            { id: 27, name: "Ruuna", role: "employee", position: "Senior Mechanic" },
+            { id: 28, name: "Rachel", role: "employee", position: "Senior Mechanic" },
+            { id: 29, name: "Angie", role: "employee", position: "Senior Mechanic" },
+            { id: 30, name: "Ucok", role: "employee", position: "Senior Mechanic" },
+            { id: 31, name: "Cabe", role: "employee", position: "Senior Mechanic" },
+            { id: 32, name: "Saul", role: "employee", position: "Senior Mechanic" },
+            { id: 33, name: "Blitz", role: "employee", position: "Senior Mechanic" },
+            { id: 34, name: "Muller", role: "employee", position: "Mechanic" },
+            { id: 35, name: "Zumi", role: "employee", position: "Mechanic" },
+            { id: 36, name: "Ajat", role: "employee", position: "Mechanic" },
+            { id: 37, name: "Molly", role: "employee", position: "Mechanic" },
+            { id: 38, name: "Mai", role: "employee", position: "Mechanic" },
+            { id: 39, name: "Tuffy", role: "employee", position: "Mechanic" },
+            { id: 40, name: "Darel", role: "employee", position: "Mechanic" },
+            { id: 41, name: "Lucas", role: "employee", position: "Mechanic" },
+            { id: 42, name: "Aceng", role: "employee", position: "Mechanic" },
+            { id: 43, name: "Vera", role: "employee", position: "Mechanic" },
+            { id: 44, name: "Athena", role: "employee", position: "Mechanic" },
+            { id: 45, name: "Jeni Unggrr", role: "employee", position: "Mechanic" },
+            { id: 46, name: "Latisha", role: "employee", position: "Mechanic" },
+            { id: 47, name: "Janiece", role: "employee", position: "Mechanic" },
+            { id: 48, name: "Meisya", role: "employee", position: "Mechanic" },
+            { id: 49, name: "Yuki", role: "employee", position: "Mechanic" },
+            { id: 50, name: "Jonathan", role: "employee", position: "Mechanic" },
+            { id: 51, name: "Summer", role: "employee", position: "Training" },
+            { id: 52, name: "Cia", role: "employee", position: "Training" },
+            { id: 53, name: "Kaguya", role: "employee", position: "Training" },
+            { id: 54, name: "Castella", role: "employee", position: "Training" },
+            { id: 55, name: "jejeng", role: "employee", position: "Training" },
+            { id: 56, name: "Ismaya", role: "employee", position: "Training" },
         ];
 
         // State aplikasi
