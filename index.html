@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ICR Attendance</title>
+    <link rel="icon" type="image/png" href="/images/logo.png">
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
@@ -573,6 +574,19 @@ tr:hover {
 .status-present {
     color: var(--primary);
     font-weight: bold;
+}
+
+.logo-image {
+    height: 40px; /* Sesuaikan tinggi */
+    width: auto; /* Pertahankan aspect ratio */
+    vertical-align: middle;
+}
+
+/* atau jika ingin logo lebih responsif */
+.logo-image {
+    max-height: 50px;
+    max-width: 100%;
+    height: auto;
 }
 
 .status-absent {
@@ -1184,9 +1198,9 @@ tr:hover {
                 <!-- Daftar karyawan akan diisi oleh JavaScript -->
             </div>
             <!-- Tambahkan pesan info di sini -->
-            <div class="employee-info-message">
-                Jika nama tidak ada harap hubungi <strong>Admin</strong>
-            </div>
+<div class="employee-info-message">
+    Jika nama tidak ada harap hubungi <strong>ICR - VYAN</strong>
+</div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-primary" id="confirmEmployeeBtn" disabled>
@@ -1229,7 +1243,7 @@ tr:hover {
         <nav class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <span class="icon icon-dashboard"></span>
+                    <img src="/images/logo.png" alt="Logo" class="logo-image">
                     <span>ICR Attendance</span>
                 </div>
             </div>
@@ -1289,9 +1303,6 @@ tr:hover {
                         <div class="welcome-content">
                             <h2 id="welcomeMessage">Welcome, jangan lupa isi absen kalau mau dapat gaji !</h2>
                             <p class="welcome-subtitle">Semangat bekerja hari ini !</p>
-                        </div>
-                        <div class="welcome-icon">
-                            <span class="icon icon-dashboard"></span>
                         </div>
                     </div>
                     
