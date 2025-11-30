@@ -1875,11 +1875,20 @@ tr:hover {
                 if (canViewAllData) {
                     employeesNav.style.display = 'flex';
                     reportsNav.style.display = 'flex';
-                    if (attendanceActionCard) attendanceActionCard.style.display = 'none';
                 } else {
                     employeesNav.style.display = 'none';
                     reportsNav.style.display = 'none';
-                    if (attendanceActionCard) attendanceActionCard.style.display = 'block';
+                }
+            }
+            
+            // Tampilkan/sembunyikan card absensi berdasarkan role
+            if (attendanceActionCard) {
+                if (currentUser.role === 'admin') {
+                    // Admin tidak bisa absensi
+                    attendanceActionCard.style.display = 'none';
+                } else {
+                    // Boss dan karyawan bisa absensi
+                    attendanceActionCard.style.display = 'block';
                 }
             }
             
@@ -1911,7 +1920,7 @@ tr:hover {
                 historyEmployeeFilter.appendChild(allOption);
                 
                 employees.forEach(employee => {
-                    if (employee.role === 'employee') {
+                    if (employee.role === 'employee' || employee.role === 'boss') {
                         const option = document.createElement('option');
                         option.value = employee.id;
                         option.textContent = `${employee.name} (${employee.position})`;
@@ -2309,7 +2318,7 @@ tr:hover {
             
             // Hitung statistik per employee
             employees.forEach(employee => {
-                if (employee.role === 'employee') {
+                if (employee.role === 'employee' || employee.role === 'boss') {
                     const empRecords = filteredData.filter(record => record.employeeId === employee.id);
                     
                     const dailyRecords = {};
@@ -2660,7 +2669,19 @@ tr:hover {
         function updateWelcomeMessage() {
             const welcomeMessage = document.getElementById('welcomeMessage');
             if (welcomeMessage && currentUser) {
-                welcomeMessage.textContent = `Welcome ${currentUser.name}, jangan lupa isi absen kalau mau dapat gaji!`;
+                // Clear existing content
+                welcomeMessage.innerHTML = '';
+                
+                // Create text nodes and elements
+                const welcomeText = document.createTextNode('Welcome ');
+                const boldName = document.createElement('strong');
+                boldName.textContent = currentUser.name;
+                const reminderText = document.createTextNode(', jangan lupa isi absen kalau mau dapat gaji!');
+                
+                // Append everything
+                welcomeMessage.appendChild(welcomeText);
+                welcomeMessage.appendChild(boldName);
+                welcomeMessage.appendChild(reminderText);
             }
         }
 
@@ -2672,10 +2693,16 @@ tr:hover {
             updateWelcomeMessage();
         }
 
-        // Attendance actions
+        // Attendance actions - PERUBAHAN UTAMA: Boss sekarang bisa absensi
         async function submitAttendance(type) {
-            if (!currentUser || currentUser.role !== 'employee') {
-                showNotification('Hanya karyawan yang dapat melakukan absensi', 'error');
+            if (!currentUser) {
+                showNotification('Silakan pilih user terlebih dahulu', 'error');
+                return;
+            }
+            
+            // Admin tidak bisa absensi, Boss dan Karyawan bisa
+            if (currentUser.role === 'admin') {
+                showNotification('Admin tidak dapat melakukan absensi', 'error');
                 return;
             }
             
