@@ -10,12 +10,12 @@ const FIREBASE_CONFIG = {
 
 const EMPLOYEE_PASSWORDS = {
     "Admin User": "adminICR",
-    "Enzy": "boss123",
-    "Don Oska": "boss123",
-    "Ace": "boss123",
-    "Marco": "boss123",
-    "Cartenz": "boss123",
-    "Giw": "boss123",
-    "Vyan": "boss123",
-    "Ryota": "boss123"
+    "Enzy": "bossICR",
+    "Don Oska": "bossICR",
+    "Ace": "bossICR",
+    "Marco": "bossICR",
+    "Cartenz": "bossICR",
+    "Giw": "bossICR",
+    "Vyan": "bossICR",
+    "Ryota": "bossICR"
 };
