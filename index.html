@@ -2291,379 +2291,402 @@ tr:hover {
             historyLoading.style.display = 'none';
         }
 
-        // Update employees tab
-        function updateEmployeesTab() {
-            if (!currentUser || !employeesLoading || !employeesTable) return;
+        // Update employees tab - PERUBAHAN: Tampilkan boss di tab employees
+function updateEmployeesTab() {
+    if (!currentUser || !employeesLoading || !employeesTable) return;
+    
+    const period = employeesPeriod.value;
+    
+    employeesLoading.style.display = 'block';
+    employeesTable.innerHTML = '';
+    
+    // Filter data berdasarkan periode
+    let filteredData = allAttendanceData;
+    if (period === 'week') {
+        const { startDate, endDate } = getWeekDates();
+        filteredData = filteredData.filter(record => {
+            const recordDate = new Date(record.date);
+            return recordDate >= startDate && recordDate <= endDate;
+        });
+    } else if (period === 'month') {
+        const { startDate, endDate } = getMonthDates();
+        filteredData = filteredData.filter(record => {
+            const recordDate = new Date(record.date);
+            return recordDate >= startDate && recordDate <= endDate;
+        });
+    }
+    
+    // Hitung statistik per employee dan boss - PERUBAHAN: Sertakan boss
+    employees.forEach(employee => {
+        if (employee.role === 'employee' || employee.role === 'boss') {
+            const empRecords = filteredData.filter(record => record.employeeId === employee.id);
             
-            const period = employeesPeriod.value;
+            const dailyRecords = {};
+            empRecords.forEach(record => {
+                if (!dailyRecords[record.date]) {
+                    dailyRecords[record.date] = { checkIn: null, checkOut: null };
+                }
+                
+                if (record.checkIn) dailyRecords[record.date].checkIn = record.checkIn;
+                if (record.checkOut) dailyRecords[record.date].checkOut = record.checkOut;
+            });
             
-            employeesLoading.style.display = 'block';
-            employeesTable.innerHTML = '';
+            let totalWorkHours = 0;
+            let workDaysCount = 0;
             
-            // Filter data berdasarkan periode
-            let filteredData = allAttendanceData;
-            if (period === 'week') {
-                const { startDate, endDate } = getWeekDates();
-                filteredData = filteredData.filter(record => {
-                    const recordDate = new Date(record.date);
-                    return recordDate >= startDate && recordDate <= endDate;
-                });
-            } else if (period === 'month') {
-                const { startDate, endDate } = getMonthDates();
-                filteredData = filteredData.filter(record => {
-                    const recordDate = new Date(record.date);
-                    return recordDate >= startDate && recordDate <= endDate;
-                });
-            }
-            
-            // Hitung statistik per employee
-            employees.forEach(employee => {
-                if (employee.role === 'employee' || employee.role === 'boss') {
-                    const empRecords = filteredData.filter(record => record.employeeId === employee.id);
-                    
-                    const dailyRecords = {};
-                    empRecords.forEach(record => {
-                        if (!dailyRecords[record.date]) {
-                            dailyRecords[record.date] = { checkIn: null, checkOut: null };
-                        }
-                        
-                        if (record.checkIn) dailyRecords[record.date].checkIn = record.checkIn;
-                        if (record.checkOut) dailyRecords[record.date].checkOut = record.checkOut;
-                    });
-                    
-                    let totalWorkHours = 0;
-                    let workDaysCount = 0;
-                    
-                    Object.keys(dailyRecords).forEach(date => {
-                        const record = dailyRecords[date];
-                        if (record.checkIn && record.checkOut) {
-                            const hours = calculateWorkHours(record.checkIn, record.checkOut);
-                            totalWorkHours += hours;
-                            workDaysCount++;
-                        }
-                    });
-                    
-                    const avgHours = workDaysCount > 0 ? (totalWorkHours / workDaysCount) : 0;
-                    
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${employee.name}</td>
-                        <td>${employee.position}</td>
-                        <td>${formatHoursToDetailed(totalWorkHours)}</td>
-                        <td>${workDaysCount} hari</td>
-                        <td>${formatHoursToDetailed(avgHours)}</td>
-                        <td>
-                            <button class="btn btn-primary view-employee-detail" data-employee-id="${employee.id}">
-                                <span class="icon icon-eye"></span>
-                                Detail
-                            </button>
-                        </td>
-                    `;
-                    
-                    employeesTable.appendChild(row);
+            Object.keys(dailyRecords).forEach(date => {
+                const record = dailyRecords[date];
+                if (record.checkIn && record.checkOut) {
+                    const hours = calculateWorkHours(record.checkIn, record.checkOut);
+                    totalWorkHours += hours;
+                    workDaysCount++;
                 }
             });
             
-            // Add event listeners untuk tombol detail
-            document.querySelectorAll('.view-employee-detail').forEach(button => {
-                button.addEventListener('click', () => {
-                    const employeeId = parseInt(button.getAttribute('data-employee-id'));
-                    // Switch ke history tab dengan filter employee tersebut
-                    historyEmployeeFilter.value = employeeId;
-                    navItems.forEach(nav => nav.classList.remove('active'));
-                    document.querySelector('[data-tab="history"]').classList.add('active');
-                    tabContents.forEach(content => {
-                        content.classList.remove('active');
-                        content.classList.add('hidden');
-                    });
-                    document.getElementById('historyTab').classList.remove('hidden');
-                    document.getElementById('historyTab').classList.add('active');
-                    pageTitle.textContent = 'Riwayat Absensi - ICR Attendance';
-                    updateHistoryTab();
-                });
-            });
+            const avgHours = workDaysCount > 0 ? (totalWorkHours / workDaysCount) : 0;
             
-            employeesLoading.style.display = 'none';
+            const row = document.createElement('tr');
+            
+            // Tambahkan badge untuk boss
+            const roleBadge = employee.role === 'boss' ? ' <span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px;">BOSS</span>' : '';
+            
+            row.innerHTML = `
+                <td>${employee.name}${roleBadge}</td>
+                <td>${employee.position}</td>
+                <td>${formatHoursToDetailed(totalWorkHours)}</td>
+                <td>${workDaysCount} hari</td>
+                <td>${formatHoursToDetailed(avgHours)}</td>
+                <td>
+                    <button class="btn btn-primary view-employee-detail" data-employee-id="${employee.id}">
+                        <span class="icon icon-eye"></span>
+                        Detail
+                    </button>
+                </td>
+            `;
+            
+            employeesTable.appendChild(row);
         }
+    });
+    
+    // Add event listeners untuk tombol detail
+    document.querySelectorAll('.view-employee-detail').forEach(button => {
+        button.addEventListener('click', () => {
+            const employeeId = parseInt(button.getAttribute('data-employee-id'));
+            // Switch ke history tab dengan filter employee tersebut
+            historyEmployeeFilter.value = employeeId;
+            navItems.forEach(nav => nav.classList.remove('active'));
+            document.querySelector('[data-tab="history"]').classList.add('active');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                content.classList.add('hidden');
+            });
+            document.getElementById('historyTab').classList.remove('hidden');
+            document.getElementById('historyTab').classList.add('active');
+            pageTitle.textContent = 'Riwayat Absensi - ICR Attendance';
+            updateHistoryTab();
+        });
+    });
+    
+    employeesLoading.style.display = 'none';
+}
 
         // Update reports tab
-        function updateReportsTab() {
-            if (!currentUser || !reportSummary || !warningList) return;
+function updateReportsTab() {
+    if (!currentUser || !reportSummary || !warningList) return;
+    
+    const period = reportPeriod.value;
+    let startDate, endDate;
+    
+    // Tentukan periode berdasarkan pilihan
+    if (period === 'week') {
+        ({ startDate, endDate } = getWeekDates());
+    } else if (period === 'lastWeek') {
+        ({ startDate, endDate } = getWeekDates(-1));
+    } else if (period === 'month') {
+        ({ startDate, endDate } = getMonthDates());
+    } else if (period === 'lastMonth') {
+        ({ startDate, endDate } = getMonthDates(-1));
+    }
+    
+    // Filter data berdasarkan periode
+    const filteredData = allAttendanceData.filter(record => {
+        const recordDate = new Date(record.date);
+        return recordDate >= startDate && recordDate <= endDate;
+    });
+    
+    // Hitung statistik per employee
+    const employeeStats = [];
+    const employeesWithLowHours = [];
+    
+    employees.forEach(employee => {
+        // PERUBAHAN: Sekarang termasuk boss dan employee dalam perhitungan
+        if (employee.role === 'employee' || employee.role === 'boss') {
+            const empRecords = filteredData.filter(record => record.employeeId === employee.id);
             
-            const period = reportPeriod.value;
-            let startDate, endDate;
-            
-            // Tentukan periode berdasarkan pilihan
-            if (period === 'week') {
-                ({ startDate, endDate } = getWeekDates());
-            } else if (period === 'lastWeek') {
-                ({ startDate, endDate } = getWeekDates(-1));
-            } else if (period === 'month') {
-                ({ startDate, endDate } = getMonthDates());
-            } else if (period === 'lastMonth') {
-                ({ startDate, endDate } = getMonthDates(-1));
-            }
-            
-            // Filter data berdasarkan periode
-            const filteredData = allAttendanceData.filter(record => {
-                const recordDate = new Date(record.date);
-                return recordDate >= startDate && recordDate <= endDate;
-            });
-            
-            // Hitung statistik per employee
-            const employeeStats = [];
-            const employeesWithLowHours = [];
-            
-            employees.forEach(employee => {
-                if (employee.role === 'employee') {
-                    const empRecords = filteredData.filter(record => record.employeeId === employee.id);
-                    
-                    const dailyRecords = {};
-                    empRecords.forEach(record => {
-                        if (!dailyRecords[record.date]) {
-                            dailyRecords[record.date] = { checkIn: null, checkOut: null };
-                        }
-                        
-                        if (record.checkIn) dailyRecords[record.date].checkIn = record.checkIn;
-                        if (record.checkOut) dailyRecords[record.date].checkOut = record.checkOut;
-                    });
-                    
-                    let totalWorkHours = 0;
-                    let workDaysCount = 0;
-                    
-                    Object.keys(dailyRecords).forEach(date => {
-                        const record = dailyRecords[date];
-                        if (record.checkIn && record.checkOut) {
-                            const hours = calculateWorkHours(record.checkIn, record.checkOut);
-                            totalWorkHours += hours;
-                            workDaysCount++;
-                        }
-                    });
-                    
-                    const status = totalWorkHours >= 21 ? 'Memenuhi' : 'Tidak Memenuhi';
-                    
-                    employeeStats.push({
-                        name: employee.name,
-                        position: employee.position,
-                        totalHours: totalWorkHours,
-                        workDays: workDaysCount,
-                        status: status
-                    });
-                    
-                    // Catat karyawan dengan jam kerja kurang dari 21 jam
-                    if (totalWorkHours < 21) {
-                        employeesWithLowHours.push({
-                            name: employee.name,
-                            position: employee.position,
-                            totalHours: totalWorkHours
-                        });
-                    }
+            const dailyRecords = {};
+            empRecords.forEach(record => {
+                if (!dailyRecords[record.date]) {
+                    dailyRecords[record.date] = { checkIn: null, checkOut: null };
                 }
+                
+                if (record.checkIn) dailyRecords[record.date].checkIn = record.checkIn;
+                if (record.checkOut) dailyRecords[record.date].checkOut = record.checkOut;
             });
             
-            // Update tabel ringkasan
-            reportSummary.innerHTML = '';
-            employeeStats.forEach(stat => {
-                const row = document.createElement('tr');
-                const statusClass = stat.status === 'Memenuhi' ? 'status-present' : 'status-absent';
-                
-                row.innerHTML = `
-                    <td>${stat.name}</td>
-                    <td>${stat.position}</td>
-                    <td>${stat.totalHours.toFixed(1)} jam</td>
-                    <td>${stat.workDays} hari</td>
-                    <td class="${statusClass}">${stat.status}</td>
-                `;
-                
-                reportSummary.appendChild(row);
-            });
+            let totalWorkHours = 0;
+            let workDaysCount = 0;
             
-            // Update peringatan untuk karyawan dengan jam kerja kurang dari 21 jam
-            warningList.innerHTML = '';
-            
-            if (employeesWithLowHours.length > 0) {
-                warningSection.style.display = 'block';
-                
-                employeesWithLowHours.forEach(employee => {
-                    const listItem = document.createElement('li');
-                    listItem.className = 'warning-item';
-                    listItem.innerHTML = `
-                        <span class="employee-name">${employee.name}</span> (${employee.position}) - 
-                        <span class="hours-count">${employee.totalHours.toFixed(1)} jam</span>
-                    `;
-                    warningList.appendChild(listItem);
-                });
-            } else {
-                warningSection.style.display = 'none';
-            }
-        }
-
-        // Export data ke Excel
-        function exportToExcel() {
-            if (!currentUser) return;
-            
-            const period = reportPeriod.value;
-            let startDate, endDate;
-            let periodLabel = '';
-            
-            // Tentukan periode berdasarkan pilihan
-            if (period === 'week') {
-                ({ startDate, endDate } = getWeekDates());
-                periodLabel = 'Minggu Ini';
-            } else if (period === 'lastWeek') {
-                ({ startDate, endDate } = getWeekDates(-1));
-                periodLabel = 'Minggu Lalu';
-            } else if (period === 'month') {
-                ({ startDate, endDate } = getMonthDates());
-                periodLabel = 'Bulan Ini';
-            } else if (period === 'lastMonth') {
-                ({ startDate, endDate } = getMonthDates(-1));
-                periodLabel = 'Bulan Lalu';
-            }
-            
-            // Filter data berdasarkan periode
-            const filteredData = allAttendanceData.filter(record => {
-                const recordDate = new Date(record.date);
-                return recordDate >= startDate && recordDate <= endDate;
-            });
-            
-            // Siapkan data untuk export
-            const exportData = [];
-            
-            // Header
-            exportData.push([
-                'LAPORAN ABSENSI KARYAWAN',
-                '',
-                '',
-                '',
-                '',
-                ''
-            ]);
-            
-            exportData.push([
-                `Periode: ${periodLabel}`,
-                '',
-                '',
-                '',
-                '',
-                ''
-            ]);
-            
-            exportData.push([
-                `Tanggal Export: ${new Date().toLocaleDateString('id-ID')}`,
-                '',
-                '',
-                '',
-                '',
-                ''
-            ]);
-            
-            exportData.push([]); // Baris kosong
-            
-            // Header tabel
-            exportData.push([
-                'Nama Karyawan',
-                'Jabatan',
-                'Tanggal',
-                'Check In',
-                'Check Out',
-                'Total Jam'
-            ]);
-            
-            // Data absensi
-            filteredData.forEach(record => {
-                const employee = employees.find(emp => emp.id === record.employeeId);
-                let totalHours = '-';
-                
+            Object.keys(dailyRecords).forEach(date => {
+                const record = dailyRecords[date];
                 if (record.checkIn && record.checkOut) {
-                    totalHours = calculateWorkHours(record.checkIn, record.checkOut).toFixed(2);
+                    const hours = calculateWorkHours(record.checkIn, record.checkOut);
+                    totalWorkHours += hours;
+                    workDaysCount++;
+                }
+            });
+            
+            const status = totalWorkHours >= 21 ? 'Memenuhi' : 'Tidak Memenuhi';
+            
+            employeeStats.push({
+                name: employee.name,
+                position: employee.position,
+                totalHours: totalWorkHours,
+                workDays: workDaysCount,
+                status: status,
+                role: employee.role // Tambahkan role untuk pembeda
+            });
+            
+            // PERUBAHAN: Catat boss dan karyawan dengan jam kerja kurang dari 21 jam
+            if (totalWorkHours < 21) {
+                employeesWithLowHours.push({
+                    name: employee.name,
+                    position: employee.position,
+                    totalHours: totalWorkHours,
+                    role: employee.role // Tambahkan role
+                });
+            }
+        }
+    });
+    
+    // Update tabel ringkasan - PERUBAHAN: Tampilkan semua (boss dan employee)
+    reportSummary.innerHTML = '';
+    employeeStats.forEach(stat => {
+        const row = document.createElement('tr');
+        const statusClass = stat.status === 'Memenuhi' ? 'status-present' : 'status-absent';
+        
+        // Tambahkan badge untuk membedakan boss dan employee
+        const roleBadge = stat.role === 'boss' ? ' <span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px;">BOSS</span>' : '';
+        
+        row.innerHTML = `
+            <td>${stat.name}${roleBadge}</td>
+            <td>${stat.position}</td>
+            <td>${stat.totalHours.toFixed(1)} jam</td>
+            <td>${stat.workDays} hari</td>
+            <td class="${statusClass}">${stat.status}</td>
+        `;
+        
+        reportSummary.appendChild(row);
+    });
+    
+    // Update peringatan untuk boss dan karyawan dengan jam kerja kurang dari 21 jam
+    warningList.innerHTML = '';
+    
+    if (employeesWithLowHours.length > 0) {
+        warningSection.style.display = 'block';
+        
+        // PERUBAHAN: Tampilkan semua (boss dan employee) dalam warning list
+        employeesWithLowHours.forEach(employee => {
+            const listItem = document.createElement('li');
+            listItem.className = 'warning-item';
+            
+            // Tambahkan badge untuk boss
+            const roleBadge = employee.role === 'boss' ? ' <span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px;">BOSS</span>' : '';
+            
+            listItem.innerHTML = `
+                <span class="employee-name">${employee.name}${roleBadge}</span> (${employee.position}) - 
+                <span class="hours-count">${employee.totalHours.toFixed(1)} jam</span>
+            `;
+            warningList.appendChild(listItem);
+        });
+    } else {
+        warningSection.style.display = 'none';
+    }
+}
+
+        // Export data ke Excel - PERUBAHAN: Sertakan boss dalam export
+function exportToExcel() {
+    if (!currentUser) return;
+    
+    const period = reportPeriod.value;
+    let startDate, endDate;
+    let periodLabel = '';
+    
+    // Tentukan periode berdasarkan pilihan
+    if (period === 'week') {
+        ({ startDate, endDate } = getWeekDates());
+        periodLabel = 'Minggu Ini';
+    } else if (period === 'lastWeek') {
+        ({ startDate, endDate } = getWeekDates(-1));
+        periodLabel = 'Minggu Lalu';
+    } else if (period === 'month') {
+        ({ startDate, endDate } = getMonthDates());
+        periodLabel = 'Bulan Ini';
+    } else if (period === 'lastMonth') {
+        ({ startDate, endDate } = getMonthDates(-1));
+        periodLabel = 'Bulan Lalu';
+    }
+    
+    // Filter data berdasarkan periode
+    const filteredData = allAttendanceData.filter(record => {
+        const recordDate = new Date(record.date);
+        return recordDate >= startDate && recordDate <= endDate;
+    });
+    
+    // Siapkan data untuk export
+    const exportData = [];
+    
+    // Header
+    exportData.push([
+        'LAPORAN ABSENSI KARYAWAN & BOSS',
+        '',
+        '',
+        '',
+        '',
+        ''
+    ]);
+    
+    exportData.push([
+        `Periode: ${periodLabel}`,
+        '',
+        '',
+        '',
+        '',
+        ''
+    ]);
+    
+    exportData.push([
+        `Tanggal Export: ${new Date().toLocaleDateString('id-ID')}`,
+        '',
+        '',
+        '',
+        '',
+        ''
+    ]);
+    
+    exportData.push([]); // Baris kosong
+    
+    // Header tabel
+    exportData.push([
+        'Nama',
+        'Jabatan',
+        'Role',
+        'Tanggal',
+        'Check In',
+        'Check Out',
+        'Total Jam'
+    ]);
+    
+    // Data absensi - PERUBAHAN: Sertakan role
+    filteredData.forEach(record => {
+        const employee = employees.find(emp => emp.id === record.employeeId);
+        let totalHours = '-';
+        
+        if (record.checkIn && record.checkOut) {
+            totalHours = calculateWorkHours(record.checkIn, record.checkOut).toFixed(2);
+        }
+        
+        const role = employee ? (employee.role === 'boss' ? 'BOSS' : 'KARYAWAN') : 'Unknown';
+        
+        exportData.push([
+            employee ? employee.name : 'Unknown',
+            employee ? employee.position : 'Unknown',
+            role,
+            new Date(record.date).toLocaleDateString('id-ID'),
+            record.checkIn || '-',
+            record.checkOut || '-',
+            totalHours
+        ]);
+    });
+    
+    exportData.push([]); // Baris kosong
+    
+    // Ringkasan per karyawan dan boss
+    exportData.push([
+        'RINGKASAN PER KARYAWAN & BOSS',
+        '',
+        '',
+        '',
+        '',
+        '',
+        ''
+    ]);
+    
+    exportData.push([
+        'Nama',
+        'Jabatan',
+        'Role',
+        'Total Jam Kerja',
+        'Hari Kerja',
+        'Rata-rata Jam/Hari',
+        'Status'
+    ]);
+    
+    // Hitung statistik per employee dan boss - PERUBAHAN: Sertakan boss
+    employees.forEach(employee => {
+        if (employee.role === 'employee' || employee.role === 'boss') {
+            const empRecords = filteredData.filter(record => record.employeeId === employee.id);
+            
+            const dailyRecords = {};
+            empRecords.forEach(record => {
+                if (!dailyRecords[record.date]) {
+                    dailyRecords[record.date] = { checkIn: null, checkOut: null };
                 }
                 
-                exportData.push([
-                    employee ? employee.name : 'Unknown',
-                    employee ? employee.position : 'Unknown',
-                    new Date(record.date).toLocaleDateString('id-ID'),
-                    record.checkIn || '-',
-                    record.checkOut || '-',
-                    totalHours
-                ]);
+                if (record.checkIn) dailyRecords[record.date].checkIn = record.checkIn;
+                if (record.checkOut) dailyRecords[record.date].checkOut = record.checkOut;
             });
             
-            exportData.push([]); // Baris kosong
+            let totalWorkHours = 0;
+            let workDaysCount = 0;
             
-            // Ringkasan per karyawan
-            exportData.push([
-                'RINGKASAN PER KARYAWAN',
-                '',
-                '',
-                '',
-                '',
-                ''
-            ]);
-            
-            exportData.push([
-                'Nama Karyawan',
-                'Jabatan',
-                'Total Jam Kerja',
-                'Hari Kerja',
-                'Rata-rata Jam/Hari',
-                'Status'
-            ]);
-            
-            // Hitung statistik per employee
-            employees.forEach(employee => {
-                if (employee.role === 'employee') {
-                    const empRecords = filteredData.filter(record => record.employeeId === employee.id);
-                    
-                    const dailyRecords = {};
-                    empRecords.forEach(record => {
-                        if (!dailyRecords[record.date]) {
-                            dailyRecords[record.date] = { checkIn: null, checkOut: null };
-                        }
-                        
-                        if (record.checkIn) dailyRecords[record.date].checkIn = record.checkIn;
-                        if (record.checkOut) dailyRecords[record.date].checkOut = record.checkOut;
-                    });
-                    
-                    let totalWorkHours = 0;
-                    let workDaysCount = 0;
-                    
-                    Object.keys(dailyRecords).forEach(date => {
-                        const record = dailyRecords[date];
-                        if (record.checkIn && record.checkOut) {
-                            const hours = calculateWorkHours(record.checkIn, record.checkOut);
-                            totalWorkHours += hours;
-                            workDaysCount++;
-                        }
-                    });
-                    
-                    const avgHours = workDaysCount > 0 ? (totalWorkHours / workDaysCount) : 0;
-                    const status = totalWorkHours >= 21 ? 'Memenuhi' : 'TIDAK MEMENUHI';
-                    
-                    exportData.push([
-                        employee.name,
-                        employee.position,
-                        totalWorkHours.toFixed(2),
-                        workDaysCount,
-                        avgHours.toFixed(2),
-                        status
-                    ]);
+            Object.keys(dailyRecords).forEach(date => {
+                const record = dailyRecords[date];
+                if (record.checkIn && record.checkOut) {
+                    const hours = calculateWorkHours(record.checkIn, record.checkOut);
+                    totalWorkHours += hours;
+                    workDaysCount++;
                 }
             });
             
-            // Buat worksheet
-            const ws = XLSX.utils.aoa_to_sheet(exportData);
+            const avgHours = workDaysCount > 0 ? (totalWorkHours / workDaysCount) : 0;
+            const status = totalWorkHours >= 21 ? 'Memenuhi' : 'TIDAK MEMENUHI';
+            const role = employee.role === 'boss' ? 'BOSS' : 'KARYAWAN';
             
-            // Buat workbook
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Laporan Absensi');
-            
-            // Export ke file Excel
-            const fileName = `Laporan_Absensi_${periodLabel.replace(' ', '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
-            XLSX.writeFile(wb, fileName);
-            
-            showNotification(`Laporan berhasil diexport sebagai ${fileName}`, 'success');
+            exportData.push([
+                employee.name,
+                employee.position,
+                role,
+                totalWorkHours.toFixed(2),
+                workDaysCount,
+                avgHours.toFixed(2),
+                status
+            ]);
         }
+    });
+    
+    // Buat worksheet
+    const ws = XLSX.utils.aoa_to_sheet(exportData);
+    
+    // Buat workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Laporan Absensi');
+    
+    // Export ke file Excel
+    const fileName = `Laporan_Absensi_${periodLabel.replace(' ', '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    
+    showNotification(`Laporan berhasil diexport sebagai ${fileName}`, 'success');
+}
 
         // Update welcome message
         function updateWelcomeMessage() {
