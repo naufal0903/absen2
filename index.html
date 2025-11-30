@@ -11,6 +11,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 
+    <script src="config.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
@@ -1605,15 +1607,15 @@ tr:hover {
 
         // Data karyawan
         const employees = [
-            { id: 1, name: "Admin User", role: "admin", position: "Administrator", password: "admin123" },
-            { id: 2, name: "Enzy", role: "boss", position: "boss", password: "boss123" },
-            { id: 3, name: "Don Oska", role: "boss", position: "boss", password: "boss123" },
-            { id: 4, name: "Ace", role: "boss", position: "boss", password: "boss123" },
-            { id: 5, name: "Marco", role: "boss", position: "boss", password: "boss123" },
-            { id: 6, name: "Cartenz", role: "boss", position: "boss", password: "boss123" },
-            { id: 7, name: "Giw", role: "boss", position: "boss", password: "boss123" },
-            { id: 8, name: "Vyan", role: "boss", position: "boss", password: "boss123" },
-            { id: 9, name: "Ryota", role: "boss", position: "boss", password: "boss123" },
+            { id: 1, name: "Admin User", role: "admin", position: "Administrator" },
+            { id: 2, name: "Enzy", role: "boss", position: "boss" },
+            { id: 3, name: "Don Oska", role: "boss", position: "boss" },
+            { id: 4, name: "Ace", role: "boss", position: "boss" },
+            { id: 5, name: "Marco", role: "boss", position: "boss" },
+            { id: 6, name: "Cartenz", role: "boss", position: "boss" },
+            { id: 7, name: "Giw", role: "boss", position: "boss" },
+            { id: 8, name: "Vyan", role: "boss", position: "boss" },
+            { id: 9, name: "Ryota", role: "boss", position: "boss" },
             { id: 10, name: "Tommm", role: "employee", position: "Manager" },
             { id: 11, name: "Beckham Durrel", role: "employee", position: "Manager" },
             { id: 12, name: "Goby Chana", role: "employee", position: "Manager" },
@@ -1663,6 +1665,11 @@ tr:hover {
             { id: 56, name: "jejeng", role: "employee", position: "Training" },
             { id: 57, name: "Ismaya", role: "employee", position: "Training" },
         ];
+
+
+        function verifyPassword(username, password) {
+            return EMPLOYEE_PASSWORDS[username] === password;
+        }
 
         // State aplikasi
         let currentUser = null;
@@ -2007,15 +2014,13 @@ tr:hover {
                 return;
             }
             
-            if (pendingUserChange && enteredPassword === pendingUserChange.password) {
-                // Password benar, lanjutkan perubahan user
+            if (pendingUserChange && verifyPassword(pendingUserChange.name, enteredPassword)) {
                 currentUser = pendingUserChange;
                 passwordModal.classList.remove('show');
                 initializeDashboard();
                 showNotification(`Berhasil login sebagai ${currentUser.name}`, 'success');
                 pendingUserChange = null;
             } else {
-                // Password salah
                 passwordInput.classList.add('error');
                 passwordError.textContent = 'Password salah. Silakan coba lagi.';
                 passwordError.classList.add('show');
