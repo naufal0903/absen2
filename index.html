@@ -668,6 +668,188 @@
             display: none;
         }
 
+            .force-checkout-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #ff4757, #ff3838);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 9998;
+        box-shadow: 0 4px 15px rgba(255, 71, 87, 0.5);
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .force-checkout-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(255, 71, 87, 0.7);
+    }
+
+    .force-checkout-btn.hidden {
+        display: none;
+    }
+
+    /* Modal force checkout */
+    .force-checkout-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1002;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .force-checkout-modal.hidden {
+        display: none;
+    }
+
+    .force-checkout-modal-content {
+        background: linear-gradient(135deg, #1a1a1a, #2a1a2a);
+        border-radius: 20px;
+        padding: 40px;
+        width: 90%;
+        max-width: 500px;
+        border: 2px solid #ff4757;
+        box-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
+        animation: slideUp 0.4s ease-out;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .force-checkout-modal-content::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,71,87,0.1) 0%, rgba(255,71,87,0) 70%);
+        z-index: 0;
+    }
+
+    .force-checkout-modal-title {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #ff4757;
+        font-size: 28px;
+        font-weight: bold;
+        text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+        position: relative;
+        z-index: 1;
+    }
+
+    .force-checkout-warning {
+        background: rgba(255, 71, 87, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        margin: 20px 0;
+        border: 1px solid rgba(255, 71, 87, 0.3);
+        position: relative;
+        z-index: 1;
+    }
+
+    .force-checkout-warning-title {
+        color: #ff4757;
+        font-weight: bold;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .force-checkout-options {
+        margin: 20px 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .force-checkout-option {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 1px solid var(--border-color);
+    }
+
+    .force-checkout-option:hover {
+        background: rgba(255, 71, 87, 0.1);
+        border-color: #ff4757;
+    }
+
+    .force-checkout-option.selected {
+        background: rgba(255, 71, 87, 0.15);
+        border-color: #ff4757;
+    }
+
+    .option-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .option-desc {
+        color: var(--text-secondary);
+        font-size: 12px;
+    }
+
+    .force-checkout-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .force-checkout-confirm {
+        background: linear-gradient(135deg, #ff4757, #ff3838);
+        color: white;
+        border: none;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        flex: 1;
+        transition: all 0.3s;
+    }
+
+    .force-checkout-confirm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.7);
+    }
+
+    .force-checkout-cancel {
+        background: linear-gradient(135deg, #6c757d, #495057);
+        color: white;
+        border: none;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        flex: 1;
+        transition: all 0.3s;
+    }
+
+    .force-checkout-cancel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 10px rgba(108, 117, 125, 0.7);
+    }
+
         .login-popup-content {
             background: linear-gradient(135deg, #1a1a1a, #2a1a2a);
             border-radius: 20px;
@@ -1473,6 +1655,51 @@
         </div>
     </div>
 
+    <button id="forceCheckoutBtn" class="force-checkout-btn hidden">🔧 Force Checkout</button>
+
+    <div id="forceCheckoutModal" class="force-checkout-modal hidden">
+    <div class="force-checkout-modal-content">
+        <h2 class="force-checkout-modal-title">🔧 Force Checkout</h2>
+        
+        <div class="force-checkout-warning">
+            <div class="force-checkout-warning-title">⚠️ PERHATIAN</div>
+            <div>Fitur ini digunakan untuk mengatasi masalah session yang terjebak. Pastikan Anda memahami konsekuensinya.</div>
+        </div>
+        
+        <div class="selected-employee">
+            <strong>Karyawan:</strong> <span id="forceCheckoutEmployeeName">-</span>
+            <br>
+            <strong>Status:</strong> <span id="forceCheckoutStatus">-</span>
+        </div>
+        
+        <div class="force-checkout-options">
+            <div class="force-checkout-option" data-option="current">
+                <div class="option-title">Checkout Session Saat Ini</div>
+                <div class="option-desc">Menutup session aktif Anda saat ini</div>
+            </div>
+            
+            <div class="force-checkout-option" data-option="all">
+                <div class="option-title">Checkout Semua Session Aktif</div>
+                <div class="option-desc">Menutup SEMUA session aktif Anda (jika ada lebih dari satu)</div>
+            </div>
+            
+            <div class="force-checkout-option" data-option="clear">
+                <div class="option-title">Bersihkan & Reset</div>
+                <div class="option-desc">Bersihkan localStorage dan reset semua session</div>
+            </div>
+        </div>
+        
+        <div id="forceCheckoutNote" style="margin: 15px 0; padding: 10px; background: rgba(255,71,87,0.1); border-radius: 8px; font-size: 12px; color: var(--text-secondary);">
+            <!-- Catatan akan ditampilkan di sini -->
+        </div>
+        
+        <div class="force-checkout-actions">
+            <button id="forceCheckoutConfirm" class="force-checkout-confirm">Konfirmasi</button>
+            <button id="forceCheckoutCancel" class="force-checkout-cancel">Batal</button>
+        </div>
+    </div>
+</div>
+
     <script>
 
         // Inisialisasi Firebase
@@ -1771,42 +1998,82 @@
             return null;
         }
 
+        // Format tanggal singkat - DIPERBAIKI untuk konsistensi
         function formatShortDate(date) {
-            const options = { 
-                day: 'numeric',
-                month: 'short',
-                timeZone: 'Asia/Jakarta'
-            };
-            return date.toLocaleDateString('id-ID', options);
+            const monthNames = [
+                'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+                'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+            ];
+            
+            const day = date.getDate();
+            const month = monthNames[date.getMonth()];
+            
+            return `${day} ${month}`;
         }
 
-        // Fungsi untuk mendapatkan awal minggu (Senin)
+        // Fungsi untuk mendapatkan awal minggu (Senin) - DIPERBAIKI
         function getStartOfWeek(date) {
-            const day = date.getDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
-            const diff = day === 0 ? 6 : day - 1;
-            const startOfWeek = new Date(date);
-            startOfWeek.setDate(date.getDate() - diff);
-            startOfWeek.setHours(0, 0, 0, 0);
-            return startOfWeek;
+            const d = new Date(date);
+            const day = d.getDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
+            
+            // Hitung berapa hari mundur ke Senin
+            let diff = day - 1; // default: mundur ke Senin
+            
+            // Jika hari Minggu (0), mundur 6 hari ke Senin minggu lalu
+            if (day === 0) {
+                diff = -6; // Minggu -> mundur 6 hari ke Senin
+            }
+            // Jika hari Senin (1), tidak perlu mundur
+            else if (day === 1) {
+                diff = 0;
+            }
+            // Untuk hari lain, mundur ke Senin
+            else {
+                diff = day - 1;
+            }
+            
+            d.setDate(d.getDate() - diff);
+            d.setHours(0, 0, 0, 0);
+            return d;
         }
 
-        // Fungsi untuk mendapatkan akhir minggu (Minggu)
-        function getEndOfWeek(date) {
-            const startOfWeek = getStartOfWeek(date);
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6);
-            endOfWeek.setHours(23, 59, 59, 999);
-            return endOfWeek;
+        // Fungsi untuk mendapatkan awal minggu (Senin) - VERSI SIMPLE
+        function getStartOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
+            
+            // Hitung berapa hari mundur ke Senin
+            // Jika hari Minggu (0) -> mundur 6 hari
+            // Jika hari Senin (1) -> tidak mundur
+            // Jika hari Selasa (2) -> mundur 1 hari
+            // dst...
+            let daysToSubtract = 0;
+            
+            if (day === 0) { // Minggu
+                daysToSubtract = 6; // mundur ke Senin minggu lalu
+            } else {
+                daysToSubtract = day - 1; // mundur ke Senin minggu ini
+            }
+            
+            d.setDate(d.getDate() - daysToSubtract);
+            d.setHours(0, 0, 0, 0);
+            return d;
         }
 
-        // Fungsi untuk mendapatkan hari tertentu dalam minggu
+        // Fungsi untuk mendapatkan hari tertentu dalam minggu - DIPERBAIKI
         function getDayOfWeek(startOfWeek, dayIndex) {
             const day = new Date(startOfWeek);
+            
+            // Karena startOfWeek sudah Senin, tidak perlu adjustment
+            // dayIndex 0 = Senin, 1 = Selasa, ..., 6 = Minggu
             day.setDate(startOfWeek.getDate() + dayIndex);
+            
+            // Pastikan jam 00:00:00 untuk konsistensi query
+            day.setHours(0, 0, 0, 0);
             return day;
         }
 
-        // Fungsi untuk mendapatkan tanggal mingguan
+        // Fungsi untuk mendapatkan tanggal mingguan - DIPERBAIKI
         function getWeekDates(weekOffset = 0) {
             const today = getWIBTime();
             const startOfWeek = getStartOfWeek(today);
@@ -1819,6 +2086,39 @@
             end.setHours(23, 59, 59, 999);
             
             return { start, end };
+        }
+
+        // Format range mingguan - DIPERBAIKI
+        function formatWeekRange(startDate, endDate) {
+            const options = { 
+                day: 'numeric',
+                month: 'short',
+                timeZone: 'Asia/Jakarta'
+            };
+            
+            const startStr = startDate.toLocaleDateString('id-ID', options);
+            const endStr = endDate.toLocaleDateString('id-ID', options);
+            return `${startStr} - ${endStr}`;
+        }
+
+        // Format tanggal dengan format Indonesia (dd MMM)
+        function formatIndonesianDate(date) {
+            const monthNames = [
+                'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+                'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+            ];
+            
+            const day = date.getDate();
+            const month = monthNames[date.getMonth()];
+            
+            return `${day} ${month}`;
+        }
+
+        // Gunakan di formatWeekRange
+        function formatWeekRange(startDate, endDate) {
+            const startStr = formatIndonesianDate(startDate);
+            const endStr = formatIndonesianDate(endDate);
+            return `${startStr} - ${endStr}`;
         }
 
         // Update waktu real-time
@@ -1881,56 +2181,54 @@
 
         // ==================== SISTEM AUTO DAY CHANGE ====================
 
-        // Fungsi untuk memeriksa dan menangani pergantian hari
-        function handleDayChange() {
-            if (!currentUser || !checkInTime) return;
+    function handleDayChange() {
+        if (!currentUser || !checkInTime) return;
+        
+        const now = getWIBTime();
+        const currentDateStr = now.toISOString().split('T')[0];
+        const checkInDateStr = checkInTime.toISOString().split('T')[0];
+        
+        // Jika sudah melewati tengah malam (00:01 atau lebih) dan check-in dari hari kemarin
+        if (checkInDateStr !== currentDateStr) {
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
             
-            const now = getWIBTime();
-            const currentHour = getCurrentHour();
-            
-            // Jika sudah lewat tengah malam (00:00 - 04:00) dan masih check-in
-            if (currentHour >= 0 && currentHour < 4) {
-                const checkInDate = checkInTime.toISOString().split('T')[0];
-                const currentDate = now.toISOString().split('T')[0];
+            // Auto checkin baru di 00:01
+            if (currentHour === 0 && currentMinute >= 1) {
+                console.log('Pergantian hari terdeteksi, melakukan auto checkin baru...');
                 
-                if (checkInDate !== currentDate) {
-                    console.log('Pergantian hari terdeteksi, melakukan auto checkout dan checkin...');
-                    
-                    // Simpan waktu check-out di hari sebelumnya (23:59:59)
-                    const yesterdayEnd = new Date(checkInTime);
-                    yesterdayEnd.setDate(yesterdayEnd.getDate());
-                    yesterdayEnd.setHours(23, 59, 59, 999);
-                    
-                    // Pastikan yesterdayEnd tidak lebih besar dari sekarang
-                    if (yesterdayEnd > now) {
-                        yesterdayEnd.setTime(now.getTime() - 60000);
-                    }
-                    
-                    // Hitung durasi untuk hari kemarin
-                    const durationYesterday = calculateDurationForPeriod(checkInTime, yesterdayEnd);
-                    
-                    // Update check-out untuk session kemarin
-                    if (currentSessionId) {
-                        db.collection('attendance').doc(currentSessionId).update({
-                            checkOut: firebase.firestore.Timestamp.fromDate(yesterdayEnd),
-                            duration: durationYesterday,
-                            status: 'completed',
-                            autoCheckout: true,
-                            note: 'Automatically closed due to day change'
-                        }).then(() => {
-                            console.log('Auto checkout berhasil untuk hari kemarin');
-                            
-                            // Tunggu 2 detik lalu buat check-in baru
-                            setTimeout(() => {
-                                createNewCheckInForToday();
-                            }, 2000);
-                        }).catch(error => {
-                            console.error('Error auto checkout:', error);
-                        });
-                    }
+                // Simpan session kemarin dengan checkout di 23:59:59
+                const yesterdayEnd = new Date(checkInTime);
+                yesterdayEnd.setHours(23, 59, 59, 999);
+                
+                // Hitung durasi untuk hari kemarin
+                const durationYesterday = calculateDurationForPeriod(checkInTime, yesterdayEnd);
+                
+                // Update check-out untuk session kemarin
+                if (currentSessionId) {
+                    db.collection('attendance').doc(currentSessionId).update({
+                        checkOut: firebase.firestore.Timestamp.fromDate(yesterdayEnd),
+                        duration: durationYesterday,
+                        status: 'completed',
+                        autoCheckout: true,
+                        note: 'Automatically closed due to day change'
+                    }).then(() => {
+                        console.log('Auto checkout berhasil untuk hari kemarin');
+                        
+                        // Langsung buat check-in baru untuk hari ini
+                        createNewCheckInForToday();
+                    }).catch(error => {
+                        console.error('Error auto checkout:', error);
+                        // Jika error, tetap buat check-in baru
+                        createNewCheckInForToday();
+                    });
+                } else {
+                    // Jika tidak ada session ID, langsung buat check-in baru
+                    createNewCheckInForToday();
                 }
             }
         }
+    }
 
         // Fungsi untuk menghitung durasi untuk periode tertentu
         function calculateDurationForPeriod(startTime, endTime) {
@@ -1940,34 +2238,38 @@
             return `${diffHrs}h ${diffMins}m`;
         }
 
-        // Fungsi untuk membuat check-in baru untuk hari ini
-        function createNewCheckInForToday() {
-            const now = getWIBTime();
+    // Fungsi untuk membuat check-in baru untuk hari ini - DIPERBAIKI
+    function createNewCheckInForToday() {
+        const now = getWIBTime();
+        
+        db.collection('attendance').add({
+            employeeId: currentUser.id,
+            employeeName: currentUser.name,
+            checkIn: firebase.firestore.Timestamp.fromDate(now),
+            date: now.toISOString().split('T')[0],
+            status: 'active',
+            autoCheckin: true,
+            note: 'Auto checkin by system at day change'
+        }).then((docRef) => {
+            currentSessionId = docRef.id;
+            checkInTime = now;
             
-            db.collection('attendance').add({
-                employeeId: currentUser.id,
-                employeeName: currentUser.name,
-                checkIn: firebase.firestore.Timestamp.fromDate(now),
-                date: now.toISOString().split('T')[0],
-                status: 'active',
-                autoCheckin: true
-            }).then((docRef) => {
-                currentSessionId = docRef.id;
-                checkInTime = now;
-                
-                // Update UI
-                updateStatusUI();
-                timerInterval = setInterval(updateDuration, 60000);
-                updateDuration();
-                
-                console.log('Auto checkin berhasil untuk hari ini');
-                
-                // Tampilkan notifikasi
-                showNotification('System telah melakukan auto checkout dan checkin untuk pergantian hari');
-            }).catch(error => {
-                console.error('Error auto checkin:', error);
-            });
-        }
+            // Update UI
+            updateStatusUI();
+            timerInterval = setInterval(updateDuration, 60000);
+            updateDuration();
+            
+            console.log('Auto checkin berhasil untuk hari ini');
+            
+            // Simpan ke localStorage
+            saveStateToLocalStorage();
+            
+            // Tampilkan notifikasi
+            showNotification('System telah melakukan auto checkin untuk pergantian hari', 'info');
+        }).catch(error => {
+            console.error('Error auto checkin:', error);
+        });
+    }
 
         // Fungsi untuk mendapatkan jam sekarang
         function getCurrentHour() {
@@ -1976,68 +2278,91 @@
         }
 
         // Fungsi untuk memeriksa session yang belum checkout saat login
-        function checkUnclosedSessions() {
-            if (!currentUser) return;
-            
-            const today = getWIBTime();
-            const yesterday = new Date(today);
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toISOString().split('T')[0];
-            
-            // Cari session yang masih aktif dari kemarin
-            db.collection('attendance')
-                .where('employeeId', '==', currentUser.id)
-                .where('date', '==', yesterdayStr)
-                .where('status', '==', 'active')
-                .get()
-                .then(querySnapshot => {
-                    if (!querySnapshot.empty) {
-                        querySnapshot.forEach(doc => {
-                            const data = doc.data();
-                            const checkInTimeData = getTimestampData(data, 'checkIn');
+    // Fungsi untuk memeriksa session yang belum checkout saat login - DIPERBAIKI
+    function checkUnclosedSessions() {
+        if (!currentUser) return;
+        
+        const today = getWIBTime();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        const todayStr = today.toISOString().split('T')[0];
+        
+        // Cari session yang masih aktif dari kemarin
+        db.collection('attendance')
+            .where('employeeId', '==', currentUser.id)
+            .where('date', '==', yesterdayStr)
+            .where('status', '==', 'active')
+            .get()
+            .then(querySnapshot => {
+                if (!querySnapshot.empty) {
+                    console.log('Menemukan session aktif dari kemarin, melakukan auto checkout dan checkin...');
+                    
+                    querySnapshot.forEach(doc => {
+                        const data = doc.data();
+                        const checkInTimeData = getTimestampData(data, 'checkIn');
+                        
+                        // Auto checkout untuk session kemarin di 23:59:59
+                        const yesterdayEnd = new Date(checkInTimeData);
+                        yesterdayEnd.setHours(23, 59, 59, 999);
+                        const durationYesterday = calculateDurationForPeriod(checkInTimeData, yesterdayEnd);
+                        
+                        db.collection('attendance').doc(doc.id).update({
+                            checkOut: firebase.firestore.Timestamp.fromDate(yesterdayEnd),
+                            duration: durationYesterday,
+                            status: 'completed',
+                            autoCheckout: true,
+                            note: 'Auto closed by system - unclosed session from yesterday'
+                        }).then(() => {
+                            console.log('Session kemarin telah di auto checkout');
                             
-                            // Jika check-in dari kemarin dan belum checkout
-                            if (checkInTimeData && checkInTimeData.getDate() !== today.getDate()) {
-                                console.log('Menemukan session yang belum checkout dari kemarin');
-                                
-                                // Auto checkout untuk session kemarin
-                                const yesterdayEnd = new Date(checkInTimeData);
-                                yesterdayEnd.setHours(23, 59, 59, 999);
-                                const durationYesterday = calculateDurationForPeriod(checkInTimeData, yesterdayEnd);
-                                
-                                db.collection('attendance').doc(doc.id).update({
-                                    checkOut: firebase.firestore.Timestamp.fromDate(yesterdayEnd),
-                                    duration: durationYesterday,
-                                    status: 'completed',
-                                    autoCheckout: true,
-                                    note: 'Auto closed by system due to day change'
-                                }).then(() => {
-                                    console.log('Session kemarin telah di auto checkout');
-                                    
-                                    // Buat check-in untuk hari ini
-                                    createNewCheckInForToday();
+                            // Cek apakah sudah ada checkin untuk hari ini
+                            db.collection('attendance')
+                                .where('employeeId', '==', currentUser.id)
+                                .where('date', '==', todayStr)
+                                .where('status', '==', 'active')
+                                .get()
+                                .then(todayQuery => {
+                                    if (todayQuery.empty) {
+                                        // Buat check-in untuk hari ini
+                                        createNewCheckInForToday();
+                                    }
                                 });
-                            }
                         });
-                    }
-                }).catch(error => {
-                    console.error('Error checking unclosed sessions:', error);
-                });
-        }
+                    });
+                }
+            }).catch(error => {
+                console.error('Error checking unclosed sessions:', error);
+            });
+    }
 
-        // Mulai monitor pergantian hari
-        function startDayChangeMonitor() {
-            // Hentikan interval sebelumnya jika ada
-            if (dayChangeInterval) {
-                clearInterval(dayChangeInterval);
-            }
-            
-            // Mulai monitor pergantian hari setiap menit
-            dayChangeInterval = setInterval(handleDayChange, 60000);
-            
-            // Juga cek setiap 30 detik untuk akurasi yang lebih baik
-            setInterval(handleDayChange, 30000);
+    // Mulai monitor pergantian hari - DIPERBAIKI
+    function startDayChangeMonitor() {
+        // Hentikan interval sebelumnya jika ada
+        if (dayChangeInterval) {
+            clearInterval(dayChangeInterval);
         }
+        
+        // Monitor setiap menit untuk deteksi pergantian hari
+        dayChangeInterval = setInterval(() => {
+            if (currentUser && checkInTime) {
+                const now = getWIBTime();
+                const checkInDateStr = checkInTime.toISOString().split('T')[0];
+                const currentDateStr = now.toISOString().split('T')[0];
+                
+                // Jika tanggal berbeda (sudah lewat tengah malam)
+                if (checkInDateStr !== currentDateStr) {
+                    const currentHour = now.getHours();
+                    const currentMinute = now.getMinutes();
+                    
+                    // Tunggu sampai 00:01 untuk auto checkin
+                    if (currentHour === 0 && currentMinute === 1) {
+                        handleDayChange();
+                    }
+                }
+            }
+        }, 60000); // Cek setiap menit
+    }
 
         // ==================== REAL-TIME LISTENERS ====================
 
@@ -2285,56 +2610,68 @@
                 });
         }
 
-        // Setup real-time listener untuk current status - DIMODIFIKASI
-        function setupCurrentStatusListener() {
-            if (!currentUser) return;
-            
-            // Hapus listener sebelumnya jika ada
-            if (activeListeners.currentStatus) {
-                activeListeners.currentStatus();
-            }
-            
-            // Setup real-time listener untuk status aktif user saat ini
-            activeListeners.currentStatus = db.collection('attendance')
-                .where('employeeId', '==', currentUser.id)
-                .where('status', '==', 'active')
-                .onSnapshot(querySnapshot => {
-                    if (querySnapshot.empty) {
-                        // Tidak ada session aktif di Firebase
-                        if (checkInTime) {
-                            console.log('Session aktif di local tapi tidak di Firebase');
-                            
-                            // Coba verifikasi dengan data localStorage
-                            const checkinData = localStorage.getItem(STORAGE_KEYS.CHECKIN_DATA);
-                            if (checkinData) {
-                                const data = JSON.parse(checkinData);
-                                if (data.sessionId === currentSessionId) {
-                                    // Session masih valid di local, biarkan
-                                    console.log('Session masih valid di local storage');
-                                    return;
-                                }
+    // Setup real-time listener untuk current status - DIPERBAIKI LAGI
+    function setupCurrentStatusListener() {
+        if (!currentUser) return;
+        
+        // Hapus listener sebelumnya jika ada
+        if (activeListeners.currentStatus) {
+            activeListeners.currentStatus();
+        }
+        
+        // Setup real-time listener untuk status aktif user saat ini
+        activeListeners.currentStatus = db.collection('attendance')
+            .where('employeeId', '==', currentUser.id)
+            .where('status', '==', 'active')
+            .onSnapshot(querySnapshot => {
+                if (querySnapshot.empty) {
+                    // Tidak ada session aktif di Firebase
+                    if (checkInTime) {
+                        console.log('Session aktif di local tapi tidak di Firebase');
+                        
+                        // Coba verifikasi dengan data localStorage
+                        const checkinData = localStorage.getItem(STORAGE_KEYS.CHECKIN_DATA);
+                        if (checkinData) {
+                            const data = JSON.parse(checkinData);
+                            if (data.sessionId === currentSessionId) {
+                                // Session masih valid di local, biarkan
+                                console.log('Session masih valid di local storage');
+                                return;
                             }
-                            
-                            // Jika tidak valid, reset
-                            checkInTime = null;
-                            currentSessionId = null;
-                            clearInterval(timerInterval);
-                            updateStatusUI();
-                            clearStateFromLocalStorage();
                         }
-                    } else {
-                        // Ada session aktif di Firebase
-                        const doc = querySnapshot.docs[0];
-                        const data = doc.data();
-                        const checkInTimeData = getTimestampData(data, 'checkIn');
-                        const now = getWIBTime();
+                        
+                        // Jika tidak valid, reset
+                        checkInTime = null;
+                        currentSessionId = null;
+                        clearInterval(timerInterval);
+                        updateStatusUI();
+                        clearStateFromLocalStorage();
+                    }
+                } else {
+                    // Ada session aktif di Firebase
+                    const doc = querySnapshot.docs[0];
+                    const data = doc.data();
+                    const checkInTimeData = getTimestampData(data, 'checkIn');
+                    const now = getWIBTime();
+                    
+                    if (checkInTimeData) {
+                        const checkInDateStr = checkInTimeData.toISOString().split('T')[0];
+                        const currentDateStr = now.toISOString().split('T')[0];
                         
                         // Periksa apakah session ini dari hari yang berbeda
-                        if (checkInTimeData && checkInTimeData.getDate() !== now.getDate()) {
-                            // Session dari hari berbeda, auto checkout dan buat baru
-                            handleDayChange();
-                        } else if (!checkInTime || checkInTime.getTime() !== checkInTimeData.getTime()) {
-                            // Session baru atau berbeda, update state
+                        if (checkInDateStr !== currentDateStr) {
+                            const currentHour = now.getHours();
+                            const currentMinute = now.getMinutes();
+                            
+                            // Jika sudah lewat tengah malam, handle day change
+                            if (currentHour >= 0) {
+                                console.log('Session dari hari berbeda terdeteksi');
+                                // Tidak langsung handle, biarkan monitor handle di 00:01
+                            }
+                        }
+                        
+                        // Update state jika berbeda
+                        if (!checkInTime || checkInTime.getTime() !== checkInTimeData.getTime()) {
                             checkInTime = checkInTimeData;
                             currentSessionId = doc.id;
                             
@@ -2349,10 +2686,297 @@
                             updateDuration();
                         }
                     }
-                }, error => {
-                    console.error('Error listening to current status:', error);
-                });
+                }
+            }, error => {
+                console.error('Error listening to current status:', error);
+            });
+    }
+
+// ==================== FORCE CHECKOUT SYSTEM ====================
+
+// Variabel untuk force checkout
+let selectedForceCheckoutOption = null;
+
+// Setup force checkout button
+function setupForceCheckoutButton() {
+    const forceCheckoutBtn = document.getElementById('forceCheckoutBtn');
+    const forceCheckoutModal = document.getElementById('forceCheckoutModal');
+    const forceCheckoutCancel = document.getElementById('forceCheckoutCancel');
+    const forceCheckoutConfirm = document.getElementById('forceCheckoutConfirm');
+    const forceCheckoutOptions = document.querySelectorAll('.force-checkout-option');
+    
+    // Tampilkan/sembunyikan button berdasarkan role
+    function updateForceCheckoutButtonVisibility() {
+        if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'boss')) {
+            forceCheckoutBtn.classList.remove('hidden');
+        } else {
+            forceCheckoutBtn.classList.add('hidden');
         }
+    }
+    
+    // Show force checkout modal
+    forceCheckoutBtn.addEventListener('click', function() {
+        if (!currentUser) return;
+        
+        // Update info di modal
+        document.getElementById('forceCheckoutEmployeeName').textContent = currentUser.name;
+        document.getElementById('forceCheckoutStatus').textContent = checkInTime ? 'Sedang Check-in' : 'Check-out';
+        
+        // Reset selected option
+        selectedForceCheckoutOption = null;
+        forceCheckoutOptions.forEach(opt => opt.classList.remove('selected'));
+        updateForceCheckoutNote();
+        
+        forceCheckoutModal.classList.remove('hidden');
+    });
+    
+    // Pilih opsi force checkout
+    forceCheckoutOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            forceCheckoutOptions.forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            selectedForceCheckoutOption = this.getAttribute('data-option');
+            updateForceCheckoutNote();
+        });
+    });
+    
+    // Update catatan berdasarkan opsi yang dipilih
+    function updateForceCheckoutNote() {
+        const noteElement = document.getElementById('forceCheckoutNote');
+        
+        if (!selectedForceCheckoutOption) {
+            noteElement.innerHTML = 'Pilih salah satu opsi di atas';
+            return;
+        }
+        
+        let note = '';
+        switch(selectedForceCheckoutOption) {
+            case 'current':
+                note = `• Akan menutup session aktif Anda<br>• Durasi akan dihitung sampai waktu sekarang<br>• Anda bisa check-in kembali setelahnya`;
+                break;
+            case 'all':
+                note = `• Akan menutup SEMUA session aktif Anda<br>• Berguna jika ada multiple session<br>• Semua akan tercatat sebagai "force checkout"`;
+                break;
+            case 'clear':
+                note = `• Akan membersihkan localStorage<br>• Reset semua state aplikasi<br>• Anda perlu login ulang setelahnya`;
+                break;
+        }
+        
+        noteElement.innerHTML = note;
+    }
+    
+    // Cancel force checkout
+    forceCheckoutCancel.addEventListener('click', function() {
+        forceCheckoutModal.classList.add('hidden');
+        selectedForceCheckoutOption = null;
+    });
+    
+    // Confirm force checkout
+    forceCheckoutConfirm.addEventListener('click', async function() {
+        if (!selectedForceCheckoutOption || !currentUser) {
+            showNotification('Pilih opsi terlebih dahulu', 'error');
+            return;
+        }
+        
+        if (!confirm(`Anda yakin ingin melakukan force checkout dengan opsi: ${selectedForceCheckoutOption.toUpperCase()}?`)) {
+            return;
+        }
+        
+        try {
+            let message = '';
+            
+            switch(selectedForceCheckoutOption) {
+                case 'current':
+                    message = await forceCheckoutCurrentSession();
+                    break;
+                case 'all':
+                    message = await forceCheckoutAllSessions();
+                    break;
+                case 'clear':
+                    message = await forceClearAndReset();
+                    break;
+            }
+            
+            showNotification(message, 'success');
+            forceCheckoutModal.classList.add('hidden');
+            selectedForceCheckoutOption = null;
+            
+        } catch (error) {
+            console.error('Error force checkout:', error);
+            showNotification('Gagal melakukan force checkout: ' + error.message, 'error');
+        }
+    });
+    
+    // Update button visibility saat user login
+    if (currentUser) {
+        updateForceCheckoutButtonVisibility();
+    }
+    
+    return updateForceCheckoutButtonVisibility;
+}
+
+// Force checkout session saat ini
+async function forceCheckoutCurrentSession() {
+    if (!currentUser || !checkInTime || !currentSessionId) {
+        throw new Error('Tidak ada session aktif');
+    }
+    
+    const now = getWIBTime();
+    const duration = calculateDuration(checkInTime);
+    
+    await db.collection('attendance').doc(currentSessionId).update({
+        checkOut: firebase.firestore.Timestamp.fromDate(now),
+        duration: duration,
+        status: 'completed',
+        forceCheckout: true,
+        note: 'Force closed by user via force checkout system'
+    });
+    
+    // Update local state
+    checkInTime = null;
+    currentSessionId = null;
+    clearInterval(timerInterval);
+    clearStateFromLocalStorage();
+    updateStatusUI();
+    
+    return 'Session berhasil di force checkout';
+}
+
+// Force checkout semua session aktif
+async function forceCheckoutAllSessions() {
+    if (!currentUser) {
+        throw new Error('User tidak ditemukan');
+    }
+    
+    const now = getWIBTime();
+    const querySnapshot = await db.collection('attendance')
+        .where('employeeId', '==', currentUser.id)
+        .where('status', '==', 'active')
+        .get();
+    
+    if (querySnapshot.empty) {
+        throw new Error('Tidak ada session aktif ditemukan');
+    }
+    
+    const promises = [];
+    querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const checkInTimeData = getTimestampData(data, 'checkIn');
+        
+        if (checkInTimeData) {
+            const duration = calculateDurationForPeriod(checkInTimeData, now);
+            
+            promises.push(
+                db.collection('attendance').doc(doc.id).update({
+                    checkOut: firebase.firestore.Timestamp.fromDate(now),
+                    duration: duration,
+                    status: 'completed',
+                    forceCheckout: true,
+                    note: 'Force closed all sessions by user'
+                })
+            );
+        }
+    });
+    
+    await Promise.all(promises);
+    
+    // Update local state
+    checkInTime = null;
+    currentSessionId = null;
+    clearInterval(timerInterval);
+    clearStateFromLocalStorage();
+    updateStatusUI();
+    
+    return `${promises.length} session berhasil di force checkout`;
+}
+
+// Clear dan reset semua
+async function forceClearAndReset() {
+    if (!currentUser) {
+        throw new Error('User tidak ditemukan');
+    }
+    
+    // Tutup semua session aktif terlebih dahulu
+    try {
+        await forceCheckoutAllSessions();
+    } catch (error) {
+        // Ignore jika tidak ada session aktif
+    }
+    
+    // Bersihkan localStorage
+    clearStateFromLocalStorage();
+    
+    // Reset semua state
+    currentUser = null;
+    checkInTime = null;
+    currentSessionId = null;
+    clearInterval(timerInterval);
+    
+    // Kembali ke login
+    cleanupAllListeners();
+    showLoginPopup();
+    
+    return 'System berhasil direset. Silakan login ulang.';
+}
+
+    // Fungsi untuk memastikan hanya ada satu session aktif per user
+    function ensureSingleActiveSession() {
+        if (!currentUser) return;
+        
+        db.collection('attendance')
+            .where('employeeId', '==', currentUser.id)
+            .where('status', '==', 'active')
+            .get()
+            .then(querySnapshot => {
+                if (querySnapshot.size > 1) {
+                    console.log(`User ${currentUser.name} memiliki ${querySnapshot.size} session aktif, membersihkan...`);
+                    
+                    const sessions = [];
+                    querySnapshot.forEach(doc => {
+                        sessions.push({
+                            id: doc.id,
+                            data: doc.data(),
+                            checkIn: getTimestampData(doc.data(), 'checkIn')
+                        });
+                    });
+                    
+                    // Sort by check-in time (terlama ke terbaru)
+                    sessions.sort((a, b) => a.checkIn - b.checkIn);
+                    
+                    // Hapus semua kecuali yang terbaru
+                    const latestSession = sessions.pop(); // Ambil yang terbaru
+                    
+                    const now = getWIBTime();
+                    sessions.forEach(session => {
+                        const duration = calculateDurationForPeriod(session.checkIn, now);
+                        
+                        db.collection('attendance').doc(session.id).update({
+                            checkOut: firebase.firestore.Timestamp.fromDate(now),
+                            duration: duration,
+                            status: 'completed',
+                            autoCheckout: true,
+                            note: 'Auto closed - multiple active sessions detected'
+                        }).then(() => {
+                            console.log(`Session ${session.id} ditutup (multiple session cleanup)`);
+                        });
+                    });
+                    
+                    // Update state dengan session yang tersisa
+                    if (latestSession) {
+                        checkInTime = latestSession.checkIn;
+                        currentSessionId = latestSession.id;
+                        saveStateToLocalStorage();
+                        updateStatusUI();
+                    }
+                }
+            }).catch(error => {
+                console.error('Error checking multiple sessions:', error);
+            });
+    }
+
+    // Jalankan cleanup session ganda setiap 5 menit
+    setInterval(ensureSingleActiveSession, 5 * 60 * 1000);
+
 
         // Setup real-time listener untuk full history
         function setupFullHistoryListener() {
@@ -2687,7 +3311,7 @@
             document.getElementById('passwordModal').classList.add('hidden');
         });
 
-       // Logout - DIMODIFIKASI
+        // Update fungsi logout untuk menyembunyikan force checkout button
         document.getElementById('logoutBtn').addEventListener('click', function() {
             if (checkInTime) {
                 if (!confirm('Anda masih dalam keadaan check in. Yakin ingin logout?')) {
@@ -2712,9 +3336,101 @@
             // Clear localStorage
             clearStateFromLocalStorage();
             
+            // Sembunyikan force checkout button
+            document.getElementById('forceCheckoutBtn').classList.add('hidden');
+            document.getElementById('forceCheckoutModal').classList.add('hidden');
+            
             showLoginPopup();
             showNotification('Anda telah logout dari sistem', 'info');
         });
+
+        // Untuk admin, tambahkan opsi force checkout di employee detail
+function setupAdminForceCheckout() {
+    // Modifikasi fungsi showEmployeeDetail untuk admin
+    const originalShowEmployeeDetail = showEmployeeDetail;
+    showEmployeeDetail = function(employee) {
+        originalShowEmployeeDetail.call(this, employee);
+        
+        // Jika user adalah admin/boss, tambahkan tombol force checkout di modal
+        if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'boss')) {
+            addForceCheckoutToEmployeeModal(employee);
+        }
+    };
+}
+
+// Tambahkan tombol force checkout di modal employee detail
+function addForceCheckoutToEmployeeModal(employee) {
+    const employeeDetailInfo = document.getElementById('employeeDetailInfo');
+    
+    // Cek apakah sudah ada tombol force checkout
+    if (employeeDetailInfo.querySelector('.employee-force-checkout-btn')) {
+        return;
+    }
+    
+    const forceCheckoutBtn = document.createElement('button');
+    forceCheckoutBtn.className = 'employee-force-checkout-btn';
+    forceCheckoutBtn.innerHTML = '🔧 Force Checkout Karyawan Ini';
+    forceCheckoutBtn.style.cssText = `
+        margin-top: 10px;
+        background: linear-gradient(135deg, #ff4757, #ff3838);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100%;
+    `;
+    
+    forceCheckoutBtn.addEventListener('click', async function() {
+        if (!confirm(`Force checkout untuk ${employee.name}?`)) {
+            return;
+        }
+        
+        try {
+            const now = getWIBTime();
+            const querySnapshot = await db.collection('attendance')
+                .where('employeeId', '==', employee.id)
+                .where('status', '==', 'active')
+                .get();
+            
+            if (querySnapshot.empty) {
+                showNotification(`${employee.name} tidak memiliki session aktif`, 'info');
+                return;
+            }
+            
+            const promises = [];
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                const checkInTimeData = getTimestampData(data, 'checkIn');
+                
+                if (checkInTimeData) {
+                    const duration = calculateDurationForPeriod(checkInTimeData, now);
+                    
+                    promises.push(
+                        db.collection('attendance').doc(doc.id).update({
+                            checkOut: firebase.firestore.Timestamp.fromDate(now),
+                            duration: duration,
+                            status: 'completed',
+                            forceCheckout: true,
+                            note: `Force closed by admin: ${currentUser.name}`
+                        })
+                    );
+                }
+            });
+            
+            await Promise.all(promises);
+            showNotification(`${promises.length} session untuk ${employee.name} berhasil di force checkout`, 'success');
+            
+        } catch (error) {
+            console.error('Error force checkout employee:', error);
+            showNotification('Gagal force checkout: ' + error.message, 'error');
+        }
+    });
+    
+    employeeDetailInfo.appendChild(forceCheckoutBtn);
+}
 
         // Check In - DIMODIFIKASI
         document.getElementById('checkinBtn').addEventListener('click', function() {
@@ -2941,11 +3657,12 @@
             document.getElementById('passwordModal').classList.remove('hidden');
         }
 
-        // Tampilkan dashboard - DIMODIFIKASI
+        // Update fungsi showDashboard untuk menambahkan force checkout button
         function showDashboard() {
             document.getElementById('loginPopup').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
             document.getElementById('passwordModal').classList.add('hidden');
+            document.getElementById('forceCheckoutModal').classList.add('hidden');
             
             // Update info user
             document.getElementById('userName').textContent = currentUser.name;
@@ -2956,9 +3673,16 @@
             if (currentUser.role === 'boss' || currentUser.role === 'admin') {
                 document.getElementById('bossNav').classList.remove('hidden');
                 document.getElementById('weeklyNav').classList.remove('hidden');
+                
+                // Setup force checkout button
+                const updateButtonVisibility = setupForceCheckoutButton();
+                if (updateButtonVisibility) {
+                    updateButtonVisibility();
+                }
             } else {
                 document.getElementById('bossNav').classList.add('hidden');
                 document.getElementById('weeklyNav').classList.add('hidden');
+                document.getElementById('forceCheckoutBtn').classList.add('hidden');
             }
             
             // Setup semua real-time listeners
@@ -2966,6 +3690,9 @@
             
             // Cek session yang belum checkout dari kemarin
             checkUnclosedSessions();
+            
+            // Pastikan hanya ada satu session aktif
+            ensureSingleActiveSession();
             
             // Mulai monitor pergantian hari
             startDayChangeMonitor();
@@ -2976,6 +3703,19 @@
             // Save state ke localStorage
             saveStateToLocalStorage();
         }
+
+        // ==================== FUNGSI UTILITY TAMBAHAN ====================
+
+    // Fungsi untuk debugging - tampilkan info session
+    function debugSessionInfo() {
+        console.log('=== DEBUG SESSION INFO ===');
+        console.log('Current User:', currentUser?.name);
+        console.log('CheckIn Time:', checkInTime);
+        console.log('Current Session ID:', currentSessionId);
+        console.log('LocalStorage State:', loadStateFromLocalStorage());
+        console.log('WIB Time Now:', getWIBTime());
+        console.log('==========================');
+    }
         // ==================== EMPLOYEE DETAIL FUNCTIONS ====================
 
         // Tampilkan modal detail karyawan
@@ -2994,71 +3734,96 @@
             document.getElementById('employeeDetailModal').classList.remove('hidden');
         }
 
-        // Load detail mingguan untuk karyawan tertentu
+        // Load detail mingguan untuk karyawan tertentu - DIPERBAIKI
         function loadEmployeeWeeklyDetail(employee) {
             const { start, end } = getWeekDates(currentEmployeeWeekOffset);
             
-            document.getElementById('employeeWeekRange').textContent = `Minggu ${formatShortDate(start)} - ${formatShortDate(end)}`;
+            // Perbaiki tampilan range
+            document.getElementById('employeeWeekRange').textContent = `Minggu ${formatWeekRange(start, end)}`;
             displayEmployeeWeeklyCalendar(employee, start);
         }
 
-        // Tampilkan kalender mingguan untuk karyawan tertentu
-        function displayEmployeeWeeklyCalendar(employee, startOfWeek) {
-            const employeeDetailWeekElement = document.getElementById('employeeDetailWeek');
-            employeeDetailWeekElement.innerHTML = '';
+// Tampilkan kalender mingguan untuk karyawan tertentu - DIPERBAIKI
+function displayEmployeeWeeklyCalendar(employee, startOfWeek) {
+    const employeeDetailWeekElement = document.getElementById('employeeDetailWeek');
+    employeeDetailWeekElement.innerHTML = '';
+    
+    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    
+    for (let i = 0; i < 7; i++) {
+        const day = getDayOfWeek(startOfWeek, i);
+        const dateString = day.toISOString().split('T')[0];
+        
+        const dayCard = document.createElement('div');
+        dayCard.className = 'employee-day-card';
+        dayCard.setAttribute('data-date', dateString);
+        
+        // Tampilkan info dasar dulu
+        dayCard.innerHTML = `
+            <div class="day-name">${days[i]}</div>
+            <div class="day-date">${formatShortDate(day)}</div>
+            <div class="day-hours">Loading...</div>
+        `;
+        
+        // Kemudian load data attendance
+        getEmployeeDayAttendance(employee.id, dateString).then(attendanceData => {
+            let totalHours = 0;
+            let sessionsHtml = '';
             
-            const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-            
-            for (let i = 0; i < 7; i++) {
-                const day = getDayOfWeek(startOfWeek, i);
-                const dateString = day.toISOString().split('T')[0];
+            if (attendanceData.length > 0) {
+                dayCard.classList.add('has-data');
                 
-                const dayCard = document.createElement('div');
-                dayCard.className = 'employee-day-card';
-                dayCard.setAttribute('data-date', dateString);
-                
-                getEmployeeDayAttendance(employee.id, dateString).then(attendanceData => {
-                    let totalHours = 0;
-                    let sessionsHtml = '';
-                    
-                    if (attendanceData.length > 0) {
-                        dayCard.classList.add('has-data');
+                attendanceData.forEach(session => {
+                    if (session.checkIn) {
+                        const checkInTime = formatTime(session.checkIn);
+                        const checkOutTime = session.checkOut ? formatTime(session.checkOut) : 'Active';
+                        const duration = session.duration || (session.checkOut ? calculateDuration(session.checkIn) : '0h 0m');
                         
-                        attendanceData.forEach(session => {
-                            if (session.checkIn) {
-                                const checkInTime = formatTime(session.checkIn);
-                                const checkOutTime = session.checkOut ? formatTime(session.checkOut) : 'Active';
-                                const duration = session.duration || (session.checkOut ? calculateDuration(session.checkIn) : '0h 0m');
-                                
-                                sessionsHtml += `<div class="employee-session">${checkInTime} - ${checkOutTime}</div>`;
-                                
-                                if (session.checkOut) {
-                                    const diffMs = session.checkOut - session.checkIn;
-                                    totalHours += diffMs / (1000 * 60 * 60);
-                                }
-                            }
-                        });
-                    }
-                    
-                    dayCard.innerHTML = `
-                        <div class="day-name">${days[i]}</div>
-                        <div class="day-date">${formatShortDate(day)}</div>
-                        ${attendanceData.length > 0 ? 
-                            `<div class="day-hours">${totalHours.toFixed(1)} jam</div>
-                            <div class="employee-day-sessions">${sessionsHtml}</div>` : 
-                            '<div class="day-hours">0 jam</div>'
+                        sessionsHtml += `<div class="employee-session">${checkInTime} - ${checkOutTime}</div>`;
+                        
+                        if (session.checkOut) {
+                            const diffMs = session.checkOut - session.checkIn;
+                            totalHours += diffMs / (1000 * 60 * 60);
                         }
-                    `;
-                    
-                    dayCard.addEventListener('click', function() {
-                        const selectedDate = this.getAttribute('data-date');
-                        loadEmployeeDailyAttendance(employee, selectedDate);
-                    });
+                    }
                 });
-                
-                employeeDetailWeekElement.appendChild(dayCard);
             }
-        }
+            
+            dayCard.innerHTML = `
+                <div class="day-name">${days[i]}</div>
+                <div class="day-date">${formatShortDate(day)}</div>
+                ${attendanceData.length > 0 ? 
+                    `<div class="day-hours">${totalHours.toFixed(1)} jam</div>
+                    <div class="employee-day-sessions">${sessionsHtml}</div>` : 
+                    '<div class="day-hours">0 jam</div>'
+                }
+            `;
+            
+            dayCard.addEventListener('click', function() {
+                const selectedDate = this.getAttribute('data-date');
+                loadEmployeeDailyAttendance(employee, selectedDate);
+            });
+        });
+        
+        employeeDetailWeekElement.appendChild(dayCard);
+    }
+}
+
+function debugDateCalculation() {
+    const today = getWIBTime();
+    console.log('Today:', today, formatDate(today));
+    
+    const startOfWeek = getStartOfWeek(today);
+    const endOfWeek = getEndOfWeek(today);
+    
+    console.log('Start of week (Senin):', startOfWeek, formatDate(startOfWeek));
+    console.log('End of week (Minggu):', endOfWeek, formatDate(endOfWeek));
+    
+    for (let i = 0; i < 7; i++) {
+        const day = getDayOfWeek(startOfWeek, i);
+        console.log(`Day ${i}:`, day, formatDate(day));
+    }
+}
 
         // Ambil data absensi karyawan untuk hari tertentu
         function getEmployeeDayAttendance(employeeId, dateString) {
@@ -3148,13 +3913,16 @@
 
         // ==================== WEEKLY REPORT FUNCTIONS ====================
 
-        // Load weekly report for boss
         function loadWeeklyReport() {
             if (!currentUser || (currentUser.role !== 'boss' && currentUser.role !== 'admin')) return;
             
             const { start, end } = getWeekDates(currentWeekOffset);
             
-            document.getElementById('currentWeekRange').textContent = `Minggu ${formatShortDate(start)} - ${formatShortDate(end)}`;
+            // Debug
+            debugFullWeekCalculation();
+            
+            // Perbaiki tampilan range
+            document.getElementById('currentWeekRange').textContent = `Minggu ${formatWeekRange(start, end)}`;
             calculateWeeklyStats(start, end);
             displayWeeklyCalendar(start);
         }
@@ -3221,88 +3989,143 @@
             });
         }
 
-        // Tampilkan kalender mingguan
-        function displayWeeklyCalendar(startOfWeek) {
-            const weeklyCalendarElement = document.getElementById('weeklyCalendar');
-            weeklyCalendarElement.innerHTML = '';
-            
-            const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-            
-            for (let i = 0; i < 7; i++) {
-                const day = getDayOfWeek(startOfWeek, i);
+// Tampilkan kalender mingguan - DIPERBAIKI (FIX DATA QUERY)
+function displayWeeklyCalendar(startOfWeek) {
+    const weeklyCalendarElement = document.getElementById('weeklyCalendar');
+    weeklyCalendarElement.innerHTML = '';
+    
+    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    
+    console.log('=== DEBUG DISPLAY CALENDAR ===');
+    console.log('Start of Week (Monday):', formatDate(startOfWeek));
+    
+    for (let i = 0; i < 7; i++) {
+        const day = getDayOfWeek(startOfWeek, i);
+        const dateString = getDateString(day); // Gunakan fungsi ini
+        
+        console.log(`${days[i]} (index ${i}):`, formatDate(day), 'Date String:', dateString);
+        
+        const dayCard = document.createElement('div');
+        dayCard.className = 'day-card';
+        dayCard.setAttribute('data-date', dateString);
+        dayCard.setAttribute('data-day-index', i);
+        
+        // Tampilkan tanggal dan nama hari
+        dayCard.innerHTML = `
+            <div class="day-name">${days[i]}</div>
+            <div class="day-date">${formatShortDate(day)}</div>
+            <div class="day-hours">Loading...</div>
+        `;
+        
+        // Load data attendance untuk hari ini
+        // Pastikan query ke Firebase menggunakan dateString yang sama
+        setTimeout(() => {
+            calculateDayTotalHours(dateString).then(totalHours => {
+                let hoursClass = '';
+                if (totalHours === 0) {
+                    hoursClass = 'low-hours';
+                } else if (totalHours < 10) {
+                    hoursClass = 'low-hours';
+                } else {
+                    hoursClass = 'good-hours';
+                }
                 
-                const dayCard = document.createElement('div');
-                dayCard.className = 'day-card';
-                dayCard.setAttribute('data-date', day.toISOString().split('T')[0]);
+                const hoursElement = dayCard.querySelector('.day-hours');
+                hoursElement.className = `day-hours ${hoursClass}`;
+                hoursElement.textContent = `${totalHours.toFixed(1)} jam`;
                 
-                calculateDayTotalHours(day).then(totalHours => {
-                    let hoursClass = '';
-                    if (totalHours === 0) {
-                        hoursClass = 'low-hours';
-                    } else if (totalHours < 10) {
-                        hoursClass = 'low-hours';
-                    } else {
-                        hoursClass = 'good-hours';
-                    }
-                    
-                    dayCard.innerHTML = `
-                        <div class="day-name">${days[i]}</div>
-                        <div class="day-date">${formatShortDate(day)}</div>
-                        <div class="day-hours ${hoursClass}">${totalHours.toFixed(1)} jam</div>
-                    `;
-                });
-                
-                dayCard.addEventListener('click', function() {
-                    const selectedDate = this.getAttribute('data-date');
-                    loadDailyAttendance(selectedDate);
-                });
-                
-                weeklyCalendarElement.appendChild(dayCard);
-            }
-        }
-
-        // Hitung total jam untuk hari tertentu (semua karyawan)
-        function calculateDayTotalHours(date) {
-            return new Promise((resolve) => {
-                const startOfDay = new Date(date);
-                startOfDay.setHours(0, 0, 0, 0);
-                
-                const endOfDay = new Date(date);
-                endOfDay.setHours(23, 59, 59, 999);
-                
-                db.collection('attendance')
-                    .where('checkIn', '>=', startOfDay)
-                    .where('checkIn', '<=', endOfDay)
-                    .get()
-                    .then(querySnapshot => {
-                        let totalMinutes = 0;
-                        
-                        querySnapshot.forEach(doc => {
-                            const data = doc.data();
-                            if (data.checkOut) {
-                                const checkInTime = getTimestampData(data, 'checkIn');
-                                const checkOutTime = getTimestampData(data, 'checkOut');
-                                const diffMs = checkOutTime - checkInTime;
-                                totalMinutes += diffMs / (1000 * 60);
-                            }
-                        });
-                        
-                        const totalHours = totalMinutes / 60;
-                        resolve(totalHours);
-                    }).catch(error => {
-                        console.error('Error calculating day total hours:', error);
-                        resolve(0);
-                    });
+                console.log(`Set ${days[i]} (${dateString}) to ${totalHours.toFixed(1)} hours`);
             });
-        }
+        }, i * 100);
+        
+        dayCard.addEventListener('click', function() {
+            const selectedDate = this.getAttribute('data-date');
+            const dayIndex = this.getAttribute('data-day-index');
+            console.log(`Clicked ${days[dayIndex]}:`, selectedDate);
+            loadDailyAttendance(selectedDate);
+        });
+        
+        weeklyCalendarElement.appendChild(dayCard);
+    }
+    console.log('=== END DEBUG ===');
+}
+
+// Fungsi untuk convert tanggal ke string YYYY-MM-DD
+function getDateString(date) {
+    const d = new Date(date);
+    // Gunakan WIB time untuk konsistensi
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+
+// Hitung total jam untuk hari tertentu - DIPERBAIKI (FIX QUERY)
+function calculateDayTotalHours(dateString) {
+    return new Promise((resolve) => {
+        console.log(`Querying hours for date: ${dateString}`);
+        
+        // Query menggunakan field 'date' yang sudah ada di Firebase
+        db.collection('attendance')
+            .where('date', '==', dateString)
+            .get()
+            .then(querySnapshot => {
+                console.log(`Found ${querySnapshot.size} records for ${dateString}`);
+                
+                let totalMinutes = 0;
+                let count = 0;
+                
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    count++;
+                    
+                    if (data.checkOut) {
+                        const checkInTime = getTimestampData(data, 'checkIn');
+                        const checkOutTime = getTimestampData(data, 'checkOut');
+                        
+                        if (checkInTime && checkOutTime) {
+                            const diffMs = checkOutTime - checkInTime;
+                            const minutes = diffMs / (1000 * 60);
+                            totalMinutes += minutes;
+                            console.log(`Record ${count}: ${data.employeeName} - ${minutes.toFixed(2)} min`);
+                        }
+                    }
+                });
+                
+                const totalHours = totalMinutes / 60;
+                console.log(`Total for ${dateString}: ${totalHours.toFixed(2)} hours from ${count} records`);
+                resolve(totalHours);
+            }).catch(error => {
+                console.error('Error calculating day total hours:', error);
+                resolve(0);
+            });
+    });
+}
 
         // Load daily attendance details
         function loadDailyAttendance(dateString) {
             const selectedDayTitle = document.getElementById('selectedDayTitle');
             const dailyAttendanceList = document.getElementById('dailyAttendanceList');
             
-            const date = new Date(dateString);
-            selectedDayTitle.textContent = `Detail Absensi - ${formatDate(date)}`;
+            // Parse date string dengan benar
+            const [year, month, day] = dateString.split('-');
+            const date = new Date(year, month - 1, day); // month - 1 karena JavaScript month 0-based
+            
+            // Dapatkan nama hari dalam bahasa Indonesia
+            const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const dayName = dayNames[date.getDay()];
+            
+            // Format tanggal dengan benar
+            const formattedDate = date.toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+
+           selectedDayTitle.textContent = `Detail Absensi - ${dayName}, ${formattedDate}`;
+
+            console.log('Loading attendance for:', dateString, 'Day:', dayName);
             
             db.collection('attendance')
                 .where('date', '==', dateString)
@@ -3375,50 +4198,82 @@
                 });
         }
 
+        // Fungsi untuk debug lengkap
+function debugFullWeekCalculation() {
+    const today = getWIBTime();
+    console.log('=== FULL WEEK DEBUG ===');
+    console.log('Hari ini:', formatDate(today));
+    console.log('Hari (0=Minggu, 1=Senin):', today.getDay());
+    
+    const { start, end } = getWeekDates(currentWeekOffset);
+    console.log('Minggu offset:', currentWeekOffset);
+    console.log('Start of Week (harus Senin):', formatDate(start), 'Date String:', getDateString(start));
+    console.log('End of Week (harus Minggu):', formatDate(end), 'Date String:', getDateString(end));
+    
+    console.log('\nHari-hari dalam kalender:');
+    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    for (let i = 0; i < 7; i++) {
+        const day = getDayOfWeek(start, i);
+        console.log(`${days[i]}: ${formatDate(day)} - Date String: ${getDateString(day)}`);
+    }
+    
+    // Cek data di Firebase untuk setiap hari
+    console.log('\nChecking Firebase data for each day:');
+    for (let i = 0; i < 7; i++) {
+        const day = getDayOfWeek(start, i);
+        const dateString = getDateString(day);
+        
+        setTimeout(() => {
+            db.collection('attendance')
+                .where('date', '==', dateString)
+                .get()
+                .then(snapshot => {
+                    console.log(`${days[i]} (${dateString}): ${snapshot.size} records`);
+                });
+        }, i * 200);
+    }
+    
+    console.log('=== END DEBUG ===');
+}
+
         // ==================== INITIALIZATION ====================
 
-        // Inisialisasi aplikasi - DIMODIFIKASI
-        function initApp() {
-            setInterval(updateTime, 1000);
-            updateTime();
-            
-            // Start timer untuk update waktu utama
-            setInterval(updateTime, 1000);
-            
-            // Update waktu dashboard hub
-            setInterval(() => {
-                const wibTime = getWIBTime();
-                document.getElementById('hubCurrentTime').textContent = formatTime(wibTime);
-                document.getElementById('hubCurrentDate').textContent = formatDate(wibTime);
-            }, 1000);
-            
-            document.getElementById('employeeDetailModal').classList.add('hidden');
-            document.getElementById('passwordModal').classList.add('hidden');
-            
-            // Setup crash detection
-            setupCrashDetection();
-            
-            // Setup beforeunload listener
-            setupBeforeUnloadListener();
-            
-            // Coba recover session terlebih dahulu
-            setTimeout(async () => {
-                const recovered = await checkAndRecoverSession();
-                if (!recovered) {
-                    // Jika tidak ada session yang di-recover, tampilkan login
-                    showLoginPopup();
-                }
-            }, 500);
-            
-            // Mulai monitor global untuk semua user (untuk keamanan)
-            setInterval(() => {
-                if (currentUser && checkInTime) {
-                    handleDayChange();
-                }
-            }, 30000);
-            
-            console.log('Attendance System initialized with persistence and recovery');
-        }
+    function initApp() {
+        setInterval(updateTime, 1000);
+        updateTime();
+        
+        // Start timer untuk update waktu utama
+        setInterval(updateTime, 1000);
+        
+        // Update waktu dashboard hub
+        setInterval(() => {
+            const wibTime = getWIBTime();
+            document.getElementById('hubCurrentTime').textContent = formatTime(wibTime);
+            document.getElementById('hubCurrentDate').textContent = formatDate(wibTime);
+        }, 1000);
+        
+        document.getElementById('employeeDetailModal').classList.add('hidden');
+        document.getElementById('passwordModal').classList.add('hidden');
+        
+        // Setup crash detection
+        setupCrashDetection();
+        
+        // Setup beforeunload listener
+        setupBeforeUnloadListener();
+
+        setupAdminForceCheckout();
+        
+        // Coba recover session terlebih dahulu
+        setTimeout(async () => {
+            const recovered = await checkAndRecoverSession();
+            if (!recovered) {
+                // Jika tidak ada session yang di-recover, tampilkan login
+                showLoginPopup();
+            }
+        }, 500);
+        
+        console.log('Attendance System initialized with improved day change handling');
+    }
 
                 // Fungsi untuk membersihkan session yang "terjebak"
         function cleanupStuckSessions() {
