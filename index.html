@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Dashboard</title>
+    <title>Attendance ICR</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
@@ -1425,7 +1425,7 @@
     <div id="dashboard" class="container hidden">
         <!-- Sidebar -->
         <div class="sidebar">
-            <div class="logo">ATTENDANCE</div>
+            <div class="logo">ICR ATTENDANCE</div>
             <div class="nav-item active" data-tab="dashboard-tab">
                 <span class="nav-icon">📊</span> Dashboard
             </div>
@@ -1779,6 +1779,7 @@
         let selectedEmployee = null;
         let pendingEmployee = null;
         let dayChangeInterval = null;
+        let isCheckingIn = false;
 
         // Real-time listeners
         let activeListeners = {
@@ -2099,6 +2100,16 @@
             const startStr = startDate.toLocaleDateString('id-ID', options);
             const endStr = endDate.toLocaleDateString('id-ID', options);
             return `${startStr} - ${endStr}`;
+        }
+
+        // Ganti pemanggilan langsung dengan interval terbatas
+        function startSessionCleanupMonitor() {
+            // Hanya jalankan setiap 30 detik, bukan terus menerus
+            setInterval(() => {
+                if (currentUser && checkInTime && !isCheckingIn) {
+                    ensureSingleActiveSession();
+                }
+            }, 30000);
         }
 
         // Format tanggal dengan format Indonesia (dd MMM)
@@ -2610,87 +2621,148 @@
                 });
         }
 
-    // Setup real-time listener untuk current status - DIPERBAIKI LAGI
-    function setupCurrentStatusListener() {
-        if (!currentUser) return;
-        
-        // Hapus listener sebelumnya jika ada
-        if (activeListeners.currentStatus) {
-            activeListeners.currentStatus();
-        }
-        
-        // Setup real-time listener untuk status aktif user saat ini
-        activeListeners.currentStatus = db.collection('attendance')
-            .where('employeeId', '==', currentUser.id)
-            .where('status', '==', 'active')
-            .onSnapshot(querySnapshot => {
-                if (querySnapshot.empty) {
-                    // Tidak ada session aktif di Firebase
-                    if (checkInTime) {
-                        console.log('Session aktif di local tapi tidak di Firebase');
-                        
-                        // Coba verifikasi dengan data localStorage
-                        const checkinData = localStorage.getItem(STORAGE_KEYS.CHECKIN_DATA);
-                        if (checkinData) {
-                            const data = JSON.parse(checkinData);
-                            if (data.sessionId === currentSessionId) {
-                                // Session masih valid di local, biarkan
-                                console.log('Session masih valid di local storage');
-                                return;
-                            }
-                        }
-                        
-                        // Jika tidak valid, reset
-                        checkInTime = null;
-                        currentSessionId = null;
-                        clearInterval(timerInterval);
-                        updateStatusUI();
-                        clearStateFromLocalStorage();
-                    }
-                } else {
-                    // Ada session aktif di Firebase
-                    const doc = querySnapshot.docs[0];
-                    const data = doc.data();
-                    const checkInTimeData = getTimestampData(data, 'checkIn');
-                    const now = getWIBTime();
+// Setup real-time listener untuk current status - DENGAN PENGHORMATAN FLAG
+function setupCurrentStatusListener() {
+    if (!currentUser || isCheckingIn) {
+        console.log('Skipping status listener - checking in or no user');
+        return;
+    }
+    
+    // Hapus listener sebelumnya jika ada
+    if (activeListeners.currentStatus) {
+        activeListeners.currentStatus();
+    }
+    
+    console.log('Setting up current status listener for:', currentUser.name);
+    
+    // Setup real-time listener untuk status aktif user saat ini
+    activeListeners.currentStatus = db.collection('attendance')
+        .where('employeeId', '==', currentUser.id)
+        .where('status', '==', 'active')
+        .orderBy('checkIn', 'desc')
+        .limit(1)
+        .onSnapshot(querySnapshot => {
+            // Skip jika sedang dalam proses check-in
+            if (isCheckingIn) {
+                console.log('Listener ignored - checking in process');
+                return;
+            }
+            
+            console.log('Current status snapshot:', querySnapshot.size, 'active sessions');
+            
+            if (querySnapshot.empty) {
+                // Tidak ada session aktif di Firebase
+                if (checkInTime) {
+                    console.log('Session aktif di local tapi tidak di Firebase');
                     
-                    if (checkInTimeData) {
-                        const checkInDateStr = checkInTimeData.toISOString().split('T')[0];
-                        const currentDateStr = now.toISOString().split('T')[0];
+                    // Tunggu 3 detik sebelum reset, mungkin ada delay sync
+                    setTimeout(() => {
+                        if (isCheckingIn) return; // Skip jika sedang check-in
                         
-                        // Periksa apakah session ini dari hari yang berbeda
-                        if (checkInDateStr !== currentDateStr) {
-                            const currentHour = now.getHours();
-                            const currentMinute = now.getMinutes();
-                            
-                            // Jika sudah lewat tengah malam, handle day change
-                            if (currentHour >= 0) {
-                                console.log('Session dari hari berbeda terdeteksi');
-                                // Tidak langsung handle, biarkan monitor handle di 00:01
-                            }
-                        }
+                        db.collection('attendance')
+                            .where('employeeId', '==', currentUser.id)
+                            .where('status', '==', 'active')
+                            .get()
+                            .then(recheckSnapshot => {
+                                if (recheckSnapshot.empty && !isCheckingIn) {
+                                    // Benar-benar tidak ada session aktif
+                                    console.log('Confirmed: no active sessions');
+                                    
+                                    checkInTime = null;
+                                    currentSessionId = null;
+                                    clearInterval(timerInterval);
+                                    updateStatusUI();
+                                    clearStateFromLocalStorage();
+                                    
+                                    showNotification('Session telah berakhir', 'info');
+                                }
+                            });
+                    }, 3000);
+                }
+            } else {
+                // Ada session aktif di Firebase
+                const doc = querySnapshot.docs[0];
+                const data = doc.data();
+                const checkInTimeData = getTimestampData(data, 'checkIn');
+                
+                if (checkInTimeData && !isCheckingIn) {
+                    // Update state jika berbeda atau belum ada
+                    if (!checkInTime || checkInTime.getTime() !== checkInTimeData.getTime()) {
+                        console.log('Updating local state with session:', doc.id);
                         
-                        // Update state jika berbeda
-                        if (!checkInTime || checkInTime.getTime() !== checkInTimeData.getTime()) {
-                            checkInTime = checkInTimeData;
-                            currentSessionId = doc.id;
-                            
-                            // Update localStorage
-                            saveStateToLocalStorage();
-                            
-                            updateStatusUI();
-                            
-                            // Hentikan timer lama dan mulai yang baru
-                            clearInterval(timerInterval);
-                            timerInterval = setInterval(updateDuration, 60000);
-                            updateDuration();
-                        }
+                        checkInTime = checkInTimeData;
+                        currentSessionId = doc.id;
+                        
+                        // Update localStorage
+                        saveStateToLocalStorage();
+                        
+                        updateStatusUI();
+                        
+                        // Hentikan timer lama dan mulai yang baru
+                        clearInterval(timerInterval);
+                        timerInterval = setInterval(updateDuration, 1000);
+                        updateDuration();
                     }
                 }
-            }, error => {
-                console.error('Error listening to current status:', error);
+            }
+        }, error => {
+            console.error('Error listening to current status:', error);
+        });
+}
+
+
+// Fungsi untuk debug checkout
+function debugCheckout() {
+    console.log('=== CHECKOUT DEBUG ===');
+    console.log('Current User:', currentUser?.name);
+    console.log('CheckIn Time:', checkInTime ? formatTime(checkInTime) : 'null');
+    console.log('Current Session ID:', currentSessionId);
+    console.log('LocalStorage Checkin Data:', localStorage.getItem(STORAGE_KEYS.CHECKIN_DATA));
+    
+    if (currentUser) {
+        // Cek semua session aktif di Firebase
+        db.collection('attendance')
+            .where('employeeId', '==', currentUser.id)
+            .where('status', '==', 'active')
+            .get()
+            .then(snapshot => {
+                console.log('Active sessions in Firebase:', snapshot.size);
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    console.log(`- ${doc.id}: ${formatTime(getTimestampData(data, 'checkIn'))}`);
+                });
             });
     }
+    console.log('=== END DEBUG ===');
+}
+
+// Tambahkan tombol debug di console
+window.debugCheckout = debugCheckout;
+
+// Helper function untuk membuat session baru
+function createNewSession(wibTime) {
+    return db.collection('attendance').add({
+        employeeId: currentUser.id,
+        employeeName: currentUser.name,
+        checkIn: firebase.firestore.Timestamp.fromDate(wibTime),
+        date: wibTime.toISOString().split('T')[0],
+        status: 'active',
+        browserClosed: false
+    }).then((docRef) => {
+        currentSessionId = docRef.id;
+        checkInTime = wibTime;
+        
+        // Simpan ke localStorage
+        saveStateToLocalStorage();
+        
+        // Update UI
+        updateStatusUI();
+        timerInterval = setInterval(updateDuration, 1000);
+        updateDuration();
+        
+        return docRef;
+    });
+}
 
 // ==================== FORCE CHECKOUT SYSTEM ====================
 
@@ -2835,10 +2907,14 @@ async function forceCheckoutCurrentSession() {
     // Update local state
     checkInTime = null;
     currentSessionId = null;
+    isCheckingIn = false; // ← TAMBAHKAN INI
     clearInterval(timerInterval);
     clearStateFromLocalStorage();
     updateStatusUI();
     
+    document.getElementById('checkinBtn').disabled = false;
+    document.getElementById('checkinBtn').textContent = 'Check In';
+
     return 'Session berhasil di force checkout';
 }
 
@@ -2919,35 +2995,65 @@ async function forceClearAndReset() {
     return 'System berhasil direset. Silakan login ulang.';
 }
 
-    // Fungsi untuk memastikan hanya ada satu session aktif per user
-    function ensureSingleActiveSession() {
-        if (!currentUser) return;
-        
-        db.collection('attendance')
-            .where('employeeId', '==', currentUser.id)
-            .where('status', '==', 'active')
-            .get()
-            .then(querySnapshot => {
-                if (querySnapshot.size > 1) {
-                    console.log(`User ${currentUser.name} memiliki ${querySnapshot.size} session aktif, membersihkan...`);
-                    
-                    const sessions = [];
-                    querySnapshot.forEach(doc => {
-                        sessions.push({
-                            id: doc.id,
-                            data: doc.data(),
-                            checkIn: getTimestampData(doc.data(), 'checkIn')
-                        });
+// Fungsi untuk memastikan hanya ada satu session aktif per user - DIPERBAIKI
+function ensureSingleActiveSession() {
+    if (!currentUser) return;
+    
+    console.log('Checking for multiple active sessions...');
+    
+    db.collection('attendance')
+        .where('employeeId', '==', currentUser.id)
+        .where('status', '==', 'active')
+        .orderBy('checkIn', 'desc')
+        .get()
+        .then(querySnapshot => {
+            if (querySnapshot.size > 1) {
+                console.log(`User ${currentUser.name} memiliki ${querySnapshot.size} session aktif`);
+                
+                const sessions = [];
+                querySnapshot.forEach(doc => {
+                    sessions.push({
+                        id: doc.id,
+                        data: doc.data(),
+                        checkIn: getTimestampData(doc.data(), 'checkIn')
                     });
+                });
+                
+                // Sort by check-in time (terbaru ke terlama)
+                sessions.sort((a, b) => b.checkIn - a.checkIn);
+                
+                // Ambil session terbaru
+                const latestSession = sessions[0];
+                
+                // Update state dengan session terbaru
+                if (latestSession) {
+                    // Hanya update jika berbeda dengan current state
+                    if (!currentSessionId || currentSessionId !== latestSession.id) {
+                        console.log('Switching to latest session:', latestSession.id);
+                        
+                        // Update local state
+                        checkInTime = latestSession.checkIn;
+                        currentSessionId = latestSession.id;
+                        
+                        // Save to localStorage
+                        saveStateToLocalStorage();
+                        
+                        // Update UI
+                        updateStatusUI();
+                        
+                        // Hentikan timer lama dan mulai yang baru
+                        clearInterval(timerInterval);
+                        timerInterval = setInterval(updateDuration, 1000);
+                        updateDuration();
+                        
+                        showNotification('System switched to your latest session', 'info');
+                    }
                     
-                    // Sort by check-in time (terlama ke terbaru)
-                    sessions.sort((a, b) => a.checkIn - b.checkIn);
-                    
-                    // Hapus semua kecuali yang terbaru
-                    const latestSession = sessions.pop(); // Ambil yang terbaru
-                    
+                    // TUTUP SEMUA SESSION LAIN KECUALI YANG TERBARU
+                    const otherSessions = sessions.slice(1);
                     const now = getWIBTime();
-                    sessions.forEach(session => {
+                    
+                    otherSessions.forEach(session => {
                         const duration = calculateDurationForPeriod(session.checkIn, now);
                         
                         db.collection('attendance').doc(session.id).update({
@@ -2960,22 +3066,19 @@ async function forceClearAndReset() {
                             console.log(`Session ${session.id} ditutup (multiple session cleanup)`);
                         });
                     });
-                    
-                    // Update state dengan session yang tersisa
-                    if (latestSession) {
-                        checkInTime = latestSession.checkIn;
-                        currentSessionId = latestSession.id;
-                        saveStateToLocalStorage();
-                        updateStatusUI();
-                    }
                 }
-            }).catch(error => {
-                console.error('Error checking multiple sessions:', error);
-            });
-    }
+            }
+        }).catch(error => {
+            console.error('Error checking multiple sessions:', error);
+        });
+}
 
-    // Jalankan cleanup session ganda setiap 5 menit
-    setInterval(ensureSingleActiveSession, 5 * 60 * 1000);
+        function checkAndCleanMultipleSessions() {
+            // Hanya jalankan jika user sedang check-in
+            if (currentUser && checkInTime) {
+                ensureSingleActiveSession();
+            }
+        }
 
 
         // Setup real-time listener untuk full history
@@ -3319,6 +3422,9 @@ async function forceClearAndReset() {
                 }
             }
             
+                // Reset semua flag dan state
+            isCheckingIn = false;
+
             // Bersihkan semua listener
             cleanupAllListeners();
             
@@ -3432,126 +3538,179 @@ function addForceCheckoutToEmployeeModal(employee) {
     employeeDetailInfo.appendChild(forceCheckoutBtn);
 }
 
-        // Check In - DIMODIFIKASI
-        document.getElementById('checkinBtn').addEventListener('click', function() {
-            if (!currentUser) return;
-            
-            const wibTime = getWIBTime();
-            checkInTime = wibTime;
-            
-            // Simpan ke Firebase
-            db.collection('attendance').add({
-                employeeId: currentUser.id,
-                employeeName: currentUser.name,
-                checkIn: firebase.firestore.Timestamp.fromDate(wibTime),
-                date: wibTime.toISOString().split('T')[0],
-                status: 'active',
-                browserClosed: false
-            }).then((docRef) => {
-                currentSessionId = docRef.id;
-                
-                // Simpan ke localStorage
-                saveStateToLocalStorage();
-                
-                showNotification('Check-in berhasil!', 'success');
-            }).catch(error => {
-                console.error('Error saving check-in:', error);
-                showNotification('Gagal melakukan check-in. Silakan coba lagi.', 'error');
-            });
-        });
-
-                // ==================== SISTEM AUTO-RECOVERY ====================
-
-        // Deteksi browser crash/close
-        function setupCrashDetection() {
-            // Saat page dimuat, cek apakah ada session yang perlu di-recover
-            window.addEventListener('load', function() {
-                // Tunggu sebentar untuk memastikan Firebase siap
-                setTimeout(async () => {
-                    const recovered = await checkAndRecoverSession();
-                    
-                    if (!recovered) {
-                        // Jika tidak ada session yang di-recover, coba cek session yang belum checkout
-                        const state = loadStateFromLocalStorage();
-                        if (state.hasUser && !state.hasCheckin) {
-                            // User ada di localStorage tapi tidak ada checkin
-                            const userData = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-                            if (userData) {
-                                const user = JSON.parse(userData);
-                                const employee = employees.find(emp => emp.id === user.id);
-                                if (employee) {
-                                    currentUser = employee;
-                                    showDashboard();
-                                    showNotification('Selamat datang kembali!', 'info');
-                                }
-                            }
-                        }
-                    }
-                }, 1000);
-            });
-            
-            // Saat tab/window ditutup
-            window.addEventListener('beforeunload', function(event) {
-                if (currentUser && checkInTime && currentSessionId) {
-                    console.log('Browser ditutup dengan session aktif');
-                    
-                    // Tandai di Firebase bahwa browser ditutup
-                    if (currentSessionId) {
-                        db.collection('attendance').doc(currentSessionId).update({
-                            browserClosed: true,
-                            lastSeen: firebase.firestore.Timestamp.fromDate(getWIBTime())
-                        }).catch(error => {
-                            console.error('Error marking browser closed:', error);
-                        });
-                    }
-                    
-                    // Simpan state ke localStorage
-                    saveStateToLocalStorage();
-                }
-            });
-            
-            // Deteksi jika user kembali ke tab
-            document.addEventListener('visibilitychange', function() {
-                if (!document.hidden && currentUser && checkInTime && currentSessionId) {
-                    // User kembali ke tab, update lastSeen
-                    db.collection('attendance').doc(currentSessionId).update({
-                        browserClosed: false,
-                        lastSeen: firebase.firestore.Timestamp.fromDate(getWIBTime())
-                    }).catch(error => {
-                        console.error('Error updating last seen:', error);
-                    });
-                }
-            });
+// Check In - DENGAN FLAG
+document.getElementById('checkinBtn').addEventListener('click', async function() {
+    if (!currentUser || isCheckingIn) return;
+    
+    // Set flag untuk mencegah konflik
+    isCheckingIn = true;
+    const checkinBtn = this;
+    checkinBtn.disabled = true;
+    checkinBtn.textContent = 'Checking in...';
+    
+    const wibTime = getWIBTime();
+    
+    try {
+        // Hentikan current status listener sementara
+        if (activeListeners.currentStatus) {
+            activeListeners.currentStatus();
+            activeListeners.currentStatus = null;
         }
-
-
-        // Check Out - DIMODIFIKASI
-        document.getElementById('checkoutBtn').addEventListener('click', function() {
-            if (!currentUser || !checkInTime || !currentSessionId) return;
+        
+        // Cek session aktif di Firebase
+        const existingSessions = await db.collection('attendance')
+            .where('employeeId', '==', currentUser.id)
+            .where('status', '==', 'active')
+            .get();
+        
+        if (existingSessions.size > 0) {
+            // Ada session aktif, tanya user
+            if (!confirm('Anda sudah memiliki session aktif. Buat session baru?')) {
+                // Reset flag dan enable button
+                isCheckingIn = false;
+                checkinBtn.disabled = false;
+                checkinBtn.textContent = 'Check In';
+                setupCurrentStatusListener();
+                return;
+            }
             
-            const wibTime = getWIBTime();
-            const duration = calculateDuration(checkInTime);
+            // Tutup semua session aktif sebelumnya
+            const now = getWIBTime();
+            const closePromises = [];
             
-            // Update di Firebase
-            db.collection('attendance').doc(currentSessionId).update({
-                checkOut: firebase.firestore.Timestamp.fromDate(wibTime),
-                duration: duration,
-                status: 'completed',
-                browserClosed: false
-            }).then(() => {
-                checkInTime = null;
-                currentSessionId = null;
-                clearInterval(timerInterval);
+            existingSessions.forEach(doc => {
+                const data = doc.data();
+                const oldCheckIn = getTimestampData(data, 'checkIn');
+                const duration = calculateDurationForPeriod(oldCheckIn, now);
                 
-                // Clear dari localStorage
-                clearStateFromLocalStorage();
-                
-                showNotification('Check-out berhasil!', 'success');
-            }).catch(error => {
-                console.error('Error updating check-out:', error);
-                showNotification('Gagal melakukan check-out. Silakan coba lagi.', 'error');
+                closePromises.push(
+                    db.collection('attendance').doc(doc.id).update({
+                        checkOut: firebase.firestore.Timestamp.fromDate(now),
+                        duration: duration,
+                        status: 'completed',
+                        autoCheckout: true,
+                        note: 'Auto closed due to new check-in'
+                    })
+                );
             });
+            
+            await Promise.all(closePromises);
+            console.log('Semua session lama ditutup');
+        }
+        
+        // Buat session baru
+        const docRef = await db.collection('attendance').add({
+            employeeId: currentUser.id,
+            employeeName: currentUser.name,
+            checkIn: firebase.firestore.Timestamp.fromDate(wibTime),
+            date: wibTime.toISOString().split('T')[0],
+            status: 'active',
+            browserClosed: false
         });
+        
+        currentSessionId = docRef.id;
+        checkInTime = wibTime;
+        
+        // Simpan ke localStorage
+        saveStateToLocalStorage();
+        
+        // Update UI
+        updateStatusUI();
+        
+        // Hentikan timer lama dan mulai yang baru
+        clearInterval(timerInterval);
+        timerInterval = setInterval(updateDuration, 1000);
+        updateDuration();
+        
+        // Setup ulang listener setelah 2 detik
+        setTimeout(() => {
+            setupCurrentStatusListener();
+        }, 2000);
+        
+        showNotification('Check-in berhasil!', 'success');
+        
+    } catch (error) {
+        console.error('Error in check-in process:', error);
+        showNotification('Gagal melakukan check-in. Silakan coba lagi.', 'error');
+        
+        // Setup ulang listener jika error
+        setupCurrentStatusListener();
+    } finally {
+        // Reset flag dan enable button (dijalankan baik success maupun error)
+        isCheckingIn = false;
+        checkinBtn.disabled = false;
+        checkinBtn.textContent = 'Check In';
+    }
+});
+
+
+// Check Out - DIPERBAIKI LAGI
+document.getElementById('checkoutBtn').addEventListener('click', function() {
+    if (!currentUser || !checkInTime || !currentSessionId) return;
+    
+    const wibTime = getWIBTime();
+    const duration = calculateDuration(checkInTime);
+    
+    console.log('Checkout initiated:', {
+        employee: currentUser.name,
+        sessionId: currentSessionId,
+        checkInTime: formatTime(checkInTime),
+        duration: duration
+    });
+    
+    // Update di Firebase
+    db.collection('attendance').doc(currentSessionId).update({
+        checkOut: firebase.firestore.Timestamp.fromDate(wibTime),
+        duration: duration,
+        status: 'completed',
+        browserClosed: false
+    }).then(() => {
+        console.log('Checkout successful in Firebase');
+        
+        // Update local state
+        checkInTime = null;
+        currentSessionId = null;
+        clearInterval(timerInterval);
+        
+        // Clear dari localStorage
+        clearStateFromLocalStorage();
+        
+        // Hentikan real-time listener untuk status saat ini
+        if (activeListeners.currentStatus) {
+            activeListeners.currentStatus();
+            activeListeners.currentStatus = null;
+        }
+        
+        // Setup ulang listener untuk status
+        setTimeout(() => {
+            setupCurrentStatusListener();
+        }, 1000);
+        
+        // Update UI
+        updateStatusUI();
+        
+        showNotification('Check-out berhasil!', 'success');
+    }).catch(error => {
+        console.error('Error updating check-out:', error);
+        console.error('Error details:', error.message, error.code);
+        
+        // Coba force update dengan approach berbeda
+        if (error.code === 'permission-denied') {
+            showNotification('Gagal check-out: Akses ditolak. Coba logout dan login kembali.', 'error');
+        } else if (error.code === 'not-found') {
+            showNotification('Session tidak ditemukan di database. Membersihkan state lokal...', 'warning');
+            
+            // Clear local state
+            checkInTime = null;
+            currentSessionId = null;
+            clearInterval(timerInterval);
+            clearStateFromLocalStorage();
+            updateStatusUI();
+        } else {
+            showNotification('Gagal melakukan check-out. Silakan coba lagi.', 'error');
+        }
+    });
+});
 
         // Navigasi tab
         document.querySelectorAll('.nav-item').forEach(item => {
@@ -4255,11 +4414,12 @@ function debugFullWeekCalculation() {
         document.getElementById('employeeDetailModal').classList.add('hidden');
         document.getElementById('passwordModal').classList.add('hidden');
         
-        // Setup crash detection
-        setupCrashDetection();
+
         
         // Setup beforeunload listener
         setupBeforeUnloadListener();
+
+        startSessionCleanupMonitor();
 
         setupAdminForceCheckout();
         
