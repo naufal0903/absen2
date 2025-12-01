@@ -1474,15 +1474,6 @@
     </div>
 
     <script>
-        // Konfigurasi Firebase
-        const FIREBASE_CONFIG = {
-            apiKey: "AIzaSyD8YQ7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q7Q",
-            authDomain: "absen2-3de1a.firebaseapp.com",
-            projectId: "absen2-3de1a",
-            storageBucket: "absen2-3de1a.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef123456"
-        };
 
         // Inisialisasi Firebase
         firebase.initializeApp(FIREBASE_CONFIG);
@@ -2395,7 +2386,7 @@
             }
         });
 
-        // Submit password
+        // Fungsi submit password - menggunakan EMPLOYEE_PASSWORDS dari config.js
         document.getElementById('submitPassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('passwordInput');
             const password = passwordInput.value;
