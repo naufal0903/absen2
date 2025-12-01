@@ -1676,21 +1676,27 @@
             document.getElementById('hubCurrentDate').textContent = formatDate(wibTime);
         }
 
-        // Hitung durasi
+        // Hitung durasi - DIPERBAIKI
         function calculateDuration(startTime) {
             const now = getWIBTime();
             const diffMs = now - startTime;
             const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
             const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-            return `${diffHrs}h ${diffMins}m`;
+            const diffSecs = Math.floor((diffMs % (1000 * 60)) / 1000);
+            return `${diffHrs}h ${diffMins}m ${diffSecs}s`;
         }
 
-        // Update durasi secara real-time
+        // Update durasi secara real-time - DIPERBAIKI
         function updateDuration() {
             if (checkInTime) {
-                const duration = calculateDuration(checkInTime);
-                document.getElementById('durationDisplay').textContent = duration;
-                document.getElementById('currentDurationValue').textContent = duration;
+                const now = getWIBTime();
+                const diffMs = now - checkInTime;
+                const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                const diffSecs = Math.floor((diffMs % (1000 * 60)) / 1000);
+                
+                document.getElementById('durationDisplay').textContent = `${diffHrs}h ${diffMins}m ${diffSecs}s`;
+                document.getElementById('currentDurationValue').textContent = `${diffHrs}h ${diffMins}m ${diffSecs}s`;
             }
         }
 
@@ -1881,17 +1887,28 @@
 
         // ==================== REAL-TIME LISTENERS ====================
 
-        // Fungsi untuk membersihkan semua listener
+        // Fungsi untuk membersihkan semua listener - DIPERBAIKI LENGKAP
         function cleanupAllListeners() {
             Object.keys(activeListeners).forEach(key => {
                 if (activeListeners[key]) {
+                    // Clear semua timer dari semua element yang memiliki data-timer-id
+                    if (key === 'activeEmployees' || key === 'todayCheckins') {
+                        const timerElements = document.querySelectorAll('[data-timer-id]');
+                        timerElements.forEach(element => {
+                            const timerId = element.getAttribute('data-timer-id');
+                            if (timerId) {
+                                clearInterval(parseInt(timerId));
+                            }
+                        });
+                    }
+                    
                     activeListeners[key]();
                     activeListeners[key] = null;
                 }
             });
         }
 
-        // Setup real-time listener untuk today's check-ins
+        // Setup real-time listener untuk today's check-ins - DIPERBAIKI
         function setupTodayCheckinsListener() {
             const today = getWIBTime().toISOString().split('T')[0];
             const todayCheckinsElement = document.getElementById('todayCheckins');
@@ -1913,6 +1930,9 @@
                         return;
                     }
                     
+                    // Array untuk menyimpan interval timer
+                    const checkinTimers = [];
+                    
                     querySnapshot.forEach(doc => {
                         const data = doc.data();
                         const checkInTime = getTimestampData(data, 'checkIn');
@@ -1920,29 +1940,65 @@
                         
                         const listItem = document.createElement('li');
                         listItem.className = 'attendance-item';
+                        listItem.id = `checkin-${doc.id}`;
                         
-                        let statusHtml = '';
                         if (checkInTime) {
                             if (checkOutTime) {
-                                statusHtml = `<span class="attendance-time">${formatTime(checkInTime)} - ${formatTime(checkOutTime)}</span>`;
+                                // Sudah check-out, tampilkan waktu tetap
+                                listItem.innerHTML = `
+                                    <span>${data.employeeName}</span>
+                                    <span class="attendance-time">${formatTime(checkInTime)} - ${formatTime(checkOutTime)}</span>
+                                `;
                             } else {
-                                statusHtml = `<span class="attendance-time active-employee">${formatTime(checkInTime)} - Active</span>`;
+                                // Masih aktif, buat timer real-time
+                                listItem.innerHTML = `
+                                    <span>${data.employeeName}</span>
+                                    <span class="attendance-time active-employee">${formatTime(checkInTime)} - Active (<span class="duration-timer">0h 0m 0s</span>)</span>
+                                `;
+                                
+                                // Fungsi untuk update timer
+                                function updateCheckinTimer() {
+                                    const now = getWIBTime();
+                                    const diffMs = now - checkInTime;
+                                    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                                    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                                    const diffSecs = Math.floor((diffMs % (1000 * 60)) / 1000);
+                                    
+                                    const timerSpan = listItem.querySelector('.duration-timer');
+                                    if (timerSpan) {
+                                        timerSpan.textContent = `${diffHrs}h ${diffMins}m ${diffSecs}s`;
+                                    }
+                                }
+                                
+                                // Update awal
+                                updateCheckinTimer();
+                                
+                                // Buat timer
+                                const timerId = setInterval(updateCheckinTimer, 1000);
+                                checkinTimers.push({
+                                    elementId: `checkin-${doc.id}`,
+                                    timerId: timerId
+                                });
+                                
+                                listItem.setAttribute('data-timer-id', timerId);
                             }
-                            
-                            listItem.innerHTML = `
-                                <span>${data.employeeName}</span>
-                                ${statusHtml}
-                            `;
                             todayCheckinsElement.appendChild(listItem);
                         }
                     });
+                    
+                    // Clear semua timer saat listener di-destroy
+                    return () => {
+                        checkinTimers.forEach(timer => {
+                            clearInterval(timer.timerId);
+                        });
+                    };
                 }, error => {
                     console.error('Error listening to today check-ins:', error);
                     todayCheckinsElement.innerHTML = '<li>Error loading data</li>';
                 });
         }
 
-        // Setup real-time listener untuk active employees
+        // Setup real-time listener untuk active employees - DIPERBAIKI
         function setupActiveEmployeesListener() {
             const activeEmployeesElement = document.getElementById('activeEmployees');
             
@@ -1962,22 +2018,59 @@
                         return;
                     }
                     
+                    // Array untuk menyimpan interval timer
+                    const activeTimers = [];
+                    
                     querySnapshot.forEach(doc => {
                         const data = doc.data();
                         const checkInTime = getTimestampData(data, 'checkIn');
                         
                         if (checkInTime) {
-                            const duration = calculateDuration(checkInTime);
-                            
                             const employeeDiv = document.createElement('div');
                             employeeDiv.className = 'attendance-item active-employee';
+                            employeeDiv.id = `active-employee-${doc.id}`;
+                            
+                            // Fungsi untuk update durasi real-time
+                            function updateActiveEmployeeDuration() {
+                                const now = getWIBTime();
+                                const diffMs = now - checkInTime;
+                                const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                                const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                                const diffSecs = Math.floor((diffMs % (1000 * 60)) / 1000);
+                                
+                                const durationSpan = employeeDiv.querySelector('.attendance-time');
+                                if (durationSpan) {
+                                    durationSpan.textContent = `${diffHrs}h ${diffMins}m ${diffSecs}s`;
+                                }
+                            }
+                            
+                            // Update awal
+                            updateActiveEmployeeDuration();
+                            
+                            // Buat timer untuk update real-time
+                            const timerId = setInterval(updateActiveEmployeeDuration, 1000);
+                            activeTimers.push({
+                                elementId: `active-employee-${doc.id}`,
+                                timerId: timerId
+                            });
+                            
+                            // Simpan timer di element untuk bisa di-clear nanti
+                            employeeDiv.setAttribute('data-timer-id', timerId);
+                            
                             employeeDiv.innerHTML = `
                                 <span>${data.employeeName}</span>
-                                <span class="attendance-time">${duration}</span>
+                                <span class="attendance-time">${calculateDuration(checkInTime)}</span>
                             `;
                             activeEmployeesElement.appendChild(employeeDiv);
                         }
                     });
+                    
+                    // Clear semua timer saat listener di-destroy
+                    return () => {
+                        activeTimers.forEach(timer => {
+                            clearInterval(timer.timerId);
+                        });
+                    };
                 }, error => {
                     console.error('Error listening to active employees:', error);
                     activeEmployeesElement.innerHTML = '<p>Error loading data</p>';
@@ -3032,10 +3125,20 @@
 
         // ==================== INITIALIZATION ====================
 
-        // Inisialisasi aplikasi
+        // Inisialisasi aplikasi - DIPERBAIKI
         function initApp() {
             setInterval(updateTime, 1000);
             updateTime();
+            
+            // Start timer untuk update waktu utama
+            setInterval(updateTime, 1000);
+            
+            // Update waktu dashboard hub
+            setInterval(() => {
+                const wibTime = getWIBTime();
+                document.getElementById('hubCurrentTime').textContent = formatTime(wibTime);
+                document.getElementById('hubCurrentDate').textContent = formatDate(wibTime);
+            }, 1000);
             
             document.getElementById('employeeDetailModal').classList.add('hidden');
             document.getElementById('passwordModal').classList.add('hidden');
