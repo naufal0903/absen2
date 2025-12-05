@@ -2062,17 +2062,23 @@
             return d;
         }
 
-        // Fungsi untuk mendapatkan hari tertentu dalam minggu - DIPERBAIKI
+        // Fungsi untuk mendapatkan hari tertentu dalam minggu dengan WIB timezone
         function getDayOfWeek(startOfWeek, dayIndex) {
             const day = new Date(startOfWeek);
             
-            // Karena startOfWeek sudah Senin, tidak perlu adjustment
-            // dayIndex 0 = Senin, 1 = Selasa, ..., 6 = Minggu
+            // Tambah hari sesuai index (0 = Senin, 1 = Selasa, ..., 6 = Minggu)
             day.setDate(startOfWeek.getDate() + dayIndex);
             
-            // Pastikan jam 00:00:00 untuk konsistensi query
-            day.setHours(0, 0, 0, 0);
-            return day;
+            // Pastikan menggunakan WIB timezone dan jam 00:00:00
+            return getWIBDate(day);
+        }
+
+        // Helper function untuk mendapatkan tanggal WIB dari Date object
+        function getWIBDate(date) {
+            const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+            const wibTime = new Date(utc + (7 * 3600000));
+            wibTime.setHours(0, 0, 0, 0);
+            return wibTime;
         }
 
         // Fungsi untuk mendapatkan tanggal mingguan - DIPERBAIKI
@@ -3912,11 +3918,12 @@ function displayEmployeeWeeklyCalendar(employee, startOfWeek) {
     
     for (let i = 0; i < 7; i++) {
         const day = getDayOfWeek(startOfWeek, i);
-        const dateString = day.toISOString().split('T')[0];
+        const dateString = getDateString(day); // Gunakan fungsi yang sudah diperbaiki
         
         const dayCard = document.createElement('div');
         dayCard.className = 'employee-day-card';
         dayCard.setAttribute('data-date', dateString);
+        dayCard.setAttribute('data-day-index', i);
         
         // Tampilkan info dasar dulu
         dayCard.innerHTML = `
@@ -3925,7 +3932,7 @@ function displayEmployeeWeeklyCalendar(employee, startOfWeek) {
             <div class="day-hours">Loading...</div>
         `;
         
-        // Kemudian load data attendance
+        // Load data attendance
         getEmployeeDayAttendance(employee.id, dateString).then(attendanceData => {
             let totalHours = 0;
             let sessionsHtml = '';
@@ -3937,7 +3944,6 @@ function displayEmployeeWeeklyCalendar(employee, startOfWeek) {
                     if (session.checkIn) {
                         const checkInTime = formatTime(session.checkIn);
                         const checkOutTime = session.checkOut ? formatTime(session.checkOut) : 'Active';
-                        const duration = session.duration || (session.checkOut ? calculateDuration(session.checkIn) : '0h 0m');
                         
                         sessionsHtml += `<div class="employee-session">${checkInTime} - ${checkOutTime}</div>`;
                         
@@ -3947,22 +3953,34 @@ function displayEmployeeWeeklyCalendar(employee, startOfWeek) {
                         }
                     }
                 });
+                
+                dayCard.innerHTML = `
+                    <div class="day-name">${days[i]}</div>
+                    <div class="day-date">${formatShortDate(day)}</div>
+                    <div class="day-hours">${totalHours.toFixed(1)} jam</div>
+                    ${sessionsHtml ? `<div class="employee-day-sessions">${sessionsHtml}</div>` : ''}
+                `;
+            } else {
+                dayCard.innerHTML = `
+                    <div class="day-name">${days[i]}</div>
+                    <div class="day-date">${formatShortDate(day)}</div>
+                    <div class="day-hours">0 jam</div>
+                `;
             }
-            
-            dayCard.innerHTML = `
-                <div class="day-name">${days[i]}</div>
-                <div class="day-date">${formatShortDate(day)}</div>
-                ${attendanceData.length > 0 ? 
-                    `<div class="day-hours">${totalHours.toFixed(1)} jam</div>
-                    <div class="employee-day-sessions">${sessionsHtml}</div>` : 
-                    '<div class="day-hours">0 jam</div>'
-                }
-            `;
             
             dayCard.addEventListener('click', function() {
                 const selectedDate = this.getAttribute('data-date');
-                loadEmployeeDailyAttendance(employee, selectedDate);
+                const dayIndex = this.getAttribute('data-day-index');
+                console.log(`Clicked ${days[dayIndex]} (${selectedDate})`);
+                loadEmployeeDailyAttendance(employee, selectedDate, days[dayIndex]);
             });
+        }).catch(error => {
+            console.error('Error loading attendance for day:', error);
+            dayCard.innerHTML = `
+                <div class="day-name">${days[i]}</div>
+                <div class="day-date">${formatShortDate(day)}</div>
+                <div class="day-hours">Error</div>
+            `;
         });
         
         employeeDetailWeekElement.appendChild(dayCard);
@@ -3987,19 +4005,33 @@ function debugDateCalculation() {
 
         // Ambil data absensi karyawan untuk hari tertentu
         function getEmployeeDayAttendance(employeeId, dateString) {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
+                console.log(`Querying attendance for employee ${employeeId} on ${dateString}`);
+                
                 db.collection('attendance')
                     .where('employeeId', '==', employeeId)
                     .where('date', '==', dateString)
                     .get()
                     .then(querySnapshot => {
+                        console.log(`Found ${querySnapshot.size} records for ${dateString}`);
+                        
                         const attendanceData = [];
                         
                         querySnapshot.forEach(doc => {
                             const data = doc.data();
+                            const checkIn = getTimestampData(data, 'checkIn');
+                            const checkOut = getTimestampData(data, 'checkOut');
+                            
+                            console.log(`Record ${doc.id}:`, {
+                                employee: data.employeeName,
+                                checkIn: checkIn ? formatTime(checkIn) : 'null',
+                                checkOut: checkOut ? formatTime(checkOut) : 'null',
+                                date: data.date
+                            });
+                            
                             attendanceData.push({
-                                checkIn: getTimestampData(data, 'checkIn'),
-                                checkOut: getTimestampData(data, 'checkOut'),
+                                checkIn: checkIn,
+                                checkOut: checkOut,
                                 duration: data.duration
                             });
                         });
@@ -4007,17 +4039,36 @@ function debugDateCalculation() {
                         resolve(attendanceData);
                     }).catch(error => {
                         console.error('Error fetching employee day attendance:', error);
-                        resolve([]);
+                        reject(error);
                     });
             });
         }
 
-        function loadEmployeeDailyAttendance(employee, dateString) {
+        function loadEmployeeDailyAttendance(employee, dateString, dayName = '') {
             const employeeSelectedDayTitle = document.getElementById('employeeSelectedDayTitle');
             const employeeDailyAttendanceList = document.getElementById('employeeDailyAttendanceList');
             
-            const date = new Date(dateString);
-            employeeSelectedDayTitle.textContent = `Detail Absensi ${employee.name} - ${formatDate(date)}`;
+            // Parse date string dengan WIB timezone
+            const [year, month, day] = dateString.split('-');
+            const date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+            const wibDate = getWIBDate(date);
+            
+            // Dapatkan nama hari jika tidak disediakan
+            if (!dayName) {
+                const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                dayName = dayNames[wibDate.getDay()];
+            }
+            
+            // Format tanggal dengan benar
+            const formattedDate = wibDate.toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+
+            employeeSelectedDayTitle.textContent = `Detail Absensi ${employee.name} - ${dayName}, ${formattedDate}`;
+            
+            console.log('Loading employee attendance for:', dateString, 'Day:', dayName);
             
             getEmployeeDayAttendance(employee.id, dateString).then(attendanceData => {
                 employeeDailyAttendanceList.innerHTML = '';
@@ -4054,22 +4105,62 @@ function debugDateCalculation() {
                     }
                 });
                 
-                const totalHours = Math.floor(totalDurationMinutes / 60);
-                const totalMins = Math.floor(totalDurationMinutes % 60);
-                const totalItem = document.createElement('div');
-                totalItem.className = 'daily-attendance-item';
-                totalItem.style.borderTop = '2px solid var(--accent-color)';
-                totalItem.style.fontWeight = 'bold';
-                totalItem.innerHTML = `
-                    <div class="daily-attendance-info">
-                        <div class="daily-attendance-name">Total</div>
-                    </div>
-                    <div class="daily-attendance-duration">${totalHours}h ${totalMins}m</div>
-                `;
-                
-                employeeDailyAttendanceList.appendChild(totalItem);
+                if (totalDurationMinutes > 0) {
+                    const totalHours = Math.floor(totalDurationMinutes / 60);
+                    const totalMins = Math.floor(totalDurationMinutes % 60);
+                    const totalItem = document.createElement('div');
+                    totalItem.className = 'daily-attendance-item';
+                    totalItem.style.borderTop = '2px solid var(--accent-color)';
+                    totalItem.style.fontWeight = 'bold';
+                    totalItem.innerHTML = `
+                        <div class="daily-attendance-info">
+                            <div class="daily-attendance-name">Total</div>
+                        </div>
+                        <div class="daily-attendance-duration">${totalHours}h ${totalMins}m</div>
+                    `;
+                    
+                    employeeDailyAttendanceList.appendChild(totalItem);
+                }
+            }).catch(error => {
+                console.error('Error loading employee daily attendance:', error);
+                employeeDailyAttendanceList.innerHTML = '<div class="no-data">Error loading data</div>';
             });
         }
+
+        // Debug function untuk verifikasi
+function debugEmployeeCalendar() {
+    const today = getWIBTime();
+    const startOfWeek = getStartOfWeek(today);
+    
+    console.log('=== EMPLOYEE CALENDAR DEBUG ===');
+    console.log('Today:', formatDate(today));
+    console.log('Start of Week (Monday):', formatDate(startOfWeek));
+    
+    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    
+    for (let i = 0; i < 7; i++) {
+        const day = getDayOfWeek(startOfWeek, i);
+        const dateString = getDateString(day);
+        
+        console.log(`${days[i]} (index ${i}):`);
+        console.log('  - Date object:', day);
+        console.log('  - Formatted:', formatDate(day));
+        console.log('  - Date string:', dateString);
+        console.log('  - Day of week:', day.getDay(), '(0=Minggu, 1=Senin)');
+        
+        // Test parsing
+        const [year, month, dayNum] = dateString.split('-');
+        const parsedDate = new Date(Date.UTC(year, month - 1, dayNum));
+        const wibParsed = getWIBDate(parsedDate);
+        console.log('  - Parsed back:', formatDate(wibParsed));
+        console.log('  - Match:', formatDate(wibParsed) === formatDate(day));
+    }
+    
+    console.log('=== END DEBUG ===');
+}
+
+// Panggil debug function untuk testing
+// debugEmployeeCalendar();
 
         // ==================== WEEKLY REPORT FUNCTIONS ====================
 
@@ -4210,13 +4301,16 @@ function displayWeeklyCalendar(startOfWeek) {
     console.log('=== END DEBUG ===');
 }
 
-// Fungsi untuk convert tanggal ke string YYYY-MM-DD
+// Fungsi untuk convert tanggal ke string YYYY-MM-DD dengan WIB timezone
 function getDateString(date) {
     const d = new Date(date);
-    // Gunakan WIB time untuk konsistensi
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
+    // Convert ke WIB time (UTC+7)
+    const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    const wibTime = new Date(utc + (7 * 3600000));
+    
+    const year = wibTime.getFullYear();
+    const month = String(wibTime.getMonth() + 1).padStart(2, '0');
+    const day = String(wibTime.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
 
